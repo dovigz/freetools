@@ -47,7 +47,7 @@ export function MainHeader() {
         {/* Right: GitHub Star Button */}
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0">
           <Link
-            href="https://github.com/yourusername/freetools"
+            href="https://github.com/dovigz/freetools"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center"

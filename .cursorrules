@@ -1,0 +1,168 @@
+# FreeTools - Cursor IDE Rules
+
+## Project Context
+This is a Next.js 15 application with React 19 providing free developer tools. Built with TypeScript, Tailwind CSS, and shadcn/ui components.
+
+## Tech Stack
+- Next.js 15 (App Router)
+- React 19 
+- TypeScript (strict mode)
+- Tailwind CSS
+- shadcn/ui components
+- Radix UI primitives
+- Lucide React icons
+
+## Development Guidelines
+
+### Code Style
+- Use TypeScript for all files
+- Prefer functional components with hooks
+- Use arrow functions for component definitions
+- Implement proper error boundaries and loading states
+- Follow Next.js 15 App Router patterns
+
+### Component Patterns
+- Use shadcn/ui components as base building blocks
+- Import from `@/components/ui/*` for UI components
+- Use `cn()` utility from `@/lib/utils` for conditional classes
+- Implement proper TypeScript interfaces for props
+- Create reusable components in `components/` directory
+
+### File Structure
+- Pages go in `app/[route]/page.tsx` (App Router)
+- Components use PascalCase naming
+- Utilities use camelCase naming
+- Use `use-` prefix for custom hooks
+
+### Styling Rules
+- Use Tailwind CSS utilities exclusively
+- Leverage CSS custom properties defined in globals.css
+- Support both dark and light themes
+- Use responsive design patterns (mobile-first)
+- Apply component-specific gradients from categories.ts
+
+### Tool Development
+- Add new tools to `lib/categories.ts` first
+- Create tool pages in `app/[tool-name]/page.tsx`
+- Use consistent layout and styling patterns
+- Include proper metadata and SEO
+- Implement responsive design for all screen sizes
+
+### TypeScript Rules
+- Enable strict mode
+- Define proper interfaces for all props
+- Use type-safe imports and exports
+- Avoid `any` types
+- Implement proper error handling types
+
+### Import Patterns
+```typescript
+// External libraries first
+import React from 'react'
+import { NextPage } from 'next'
+
+// Internal utilities
+import { cn } from '@/lib/utils'
+
+// UI components
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+// Local components
+import { ToolHeader } from './components/tool-header'
+```
+
+### Component Structure
+```typescript
+interface ComponentProps {
+  // Define all props with proper types
+}
+
+export function Component({ prop1, prop2 }: ComponentProps) {
+  // Hooks at the top
+  // Event handlers
+  // Render logic
+  
+  return (
+    <div className={cn("base-classes", conditionalClasses)}>
+      {/* Component JSX */}
+    </div>
+  )
+}
+```
+
+### Performance Rules
+- Use React.memo() for expensive components
+- Implement proper loading states
+- Lazy load heavy components when possible
+- Optimize images with Next.js Image component
+- Use proper caching strategies
+
+### Accessibility Rules
+- Use semantic HTML elements
+- Include proper ARIA labels
+- Ensure keyboard navigation works
+- Maintain color contrast ratios
+- Use Radix UI primitives for complex interactions
+
+### Testing Preferences
+- Write unit tests for utility functions
+- Test component rendering and interactions
+- Verify responsive behavior
+- Test both light and dark themes
+- Ensure accessibility compliance
+
+## Specific Patterns
+
+### Tool Page Structure
+```typescript
+export default function ToolPage() {
+  return (
+    <div className="container mx-auto p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">Tool Name</h1>
+        {/* Tool implementation */}
+      </div>
+    </div>
+  )
+}
+```
+
+### Form Handling
+- Use react-hook-form for complex forms
+- Implement proper validation
+- Show loading states during submission
+- Display success/error messages using sonner
+
+### State Management
+- Use React hooks for local state
+- Consider context for shared state
+- Implement proper error boundaries
+- Handle loading states consistently
+
+## Code Quality Rules
+- Run `npm run lint` before commits
+- Fix all TypeScript errors
+- Maintain consistent formatting
+- Use meaningful variable names
+- Add comments for complex logic only
+
+## Dependencies
+- Only use dependencies already in package.json
+- Check compatibility before adding new packages
+- Prefer established, well-maintained libraries
+- Use peer dependencies when appropriate
+
+## Performance Optimization
+- Bundle size awareness
+- Image optimization
+- Lazy loading implementation
+- Efficient re-rendering patterns
+- Proper key props in lists
+
+## Security Rules
+- Sanitize user inputs
+- Validate form data
+- Use environment variables for secrets
+- Implement proper CORS policies
+- Follow Next.js security best practices

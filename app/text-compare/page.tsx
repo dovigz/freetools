@@ -41,37 +41,59 @@ function lcs(left: string[], right: string[]): number[][] {
   return dp;
 }
 
-// Word-level diff for modified lines
-function wordDiff(left: string, right: string): {
+// Character-level diff for precise word matching
+function charDiff(left: string, right: string): {
   leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
   rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
 } {
-  const leftWords = left.split(/(\s+)/);
-  const rightWords = right.split(/(\s+)/);
+  const leftChars = left.split('');
+  const rightChars = right.split('');
   
-  const dp = lcs(leftWords, rightWords);
+  const dp = lcs(leftChars, rightChars);
   const leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
   const rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
   
-  let i = leftWords.length;
-  let j = rightWords.length;
+  let i = leftChars.length;
+  let j = rightChars.length;
   
+  // Build segments by backtracking through LCS
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && leftWords[i - 1] === rightWords[j - 1]) {
-      leftSegments.unshift({ type: 'unchanged', text: leftWords[i - 1] });
-      rightSegments.unshift({ type: 'unchanged', text: rightWords[j - 1] });
+    if (i > 0 && j > 0 && leftChars[i - 1] === rightChars[j - 1]) {
+      leftSegments.unshift({ type: 'unchanged', text: leftChars[i - 1] });
+      rightSegments.unshift({ type: 'unchanged', text: rightChars[j - 1] });
       i--;
       j--;
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      rightSegments.unshift({ type: 'added', text: rightWords[j - 1] });
+      rightSegments.unshift({ type: 'added', text: rightChars[j - 1] });
       j--;
     } else if (i > 0) {
-      leftSegments.unshift({ type: 'deleted', text: leftWords[i - 1] });
+      leftSegments.unshift({ type: 'deleted', text: leftChars[i - 1] });
       i--;
     }
   }
   
-  return { leftSegments, rightSegments };
+  // Merge consecutive segments of the same type
+  const mergeSegments = (segments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>) => {
+    const merged: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
+    let current: { type: 'unchanged' | 'added' | 'deleted'; text: string } | null = null;
+    
+    for (const segment of segments) {
+      if (current && current.type === segment.type) {
+        current.text += segment.text;
+      } else {
+        if (current) merged.push(current);
+        current = { ...segment };
+      }
+    }
+    if (current) merged.push(current);
+    
+    return merged;
+  };
+  
+  return {
+    leftSegments: mergeSegments(leftSegments),
+    rightSegments: mergeSegments(rightSegments)
+  };
 }
 
 const computeTextDiff = (left: string, right: string): DiffResult => {
@@ -113,7 +135,7 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
       
       if (similarity > 0.3) {
         // Modified line
-        const { leftSegments, rightSegments } = wordDiff(leftLines[i - 1], rightLines[j - 1]);
+        const { leftSegments, rightSegments } = charDiff(leftLines[i - 1], rightLines[j - 1]);
         result.unshift({
           type: 'modified',
           leftLine: leftLineNum,

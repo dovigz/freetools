@@ -7,14 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-// Placeholder types and functions
+// Text comparison algorithm implementation
 type DiffResult = {
   lines: Array<{
-    type: string;
+    type: 'unchanged' | 'modified' | 'added' | 'deleted';
     leftLine: number | null;
     rightLine: number | null;
-    leftContent: Array<{ type: string; text: string }>;
-    rightContent: Array<{ type: string; text: string }>;
+    leftContent: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
+    rightContent: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
   }>;
   stats: {
     additions: number;
@@ -23,23 +23,192 @@ type DiffResult = {
   };
 };
 
+// Longest Common Subsequence for line matching
+function lcs(left: string[], right: string[]): number[][] {
+  const m = left.length;
+  const n = right.length;
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (left[i - 1] === right[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+  return dp;
+}
+
+// Word-level diff for modified lines
+function wordDiff(left: string, right: string): {
+  leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
+  rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
+} {
+  const leftWords = left.split(/(\s+)/);
+  const rightWords = right.split(/(\s+)/);
+  
+  const dp = lcs(leftWords, rightWords);
+  const leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
+  const rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
+  
+  let i = leftWords.length;
+  let j = rightWords.length;
+  
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && leftWords[i - 1] === rightWords[j - 1]) {
+      leftSegments.unshift({ type: 'unchanged', text: leftWords[i - 1] });
+      rightSegments.unshift({ type: 'unchanged', text: rightWords[j - 1] });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      rightSegments.unshift({ type: 'added', text: rightWords[j - 1] });
+      j--;
+    } else if (i > 0) {
+      leftSegments.unshift({ type: 'deleted', text: leftWords[i - 1] });
+      i--;
+    }
+  }
+  
+  return { leftSegments, rightSegments };
+}
+
 const computeTextDiff = (left: string, right: string): DiffResult => {
-  return {
-    lines: [],
-    stats: { additions: 0, deletions: 0, modifications: 0 }
-  };
+  const leftLines = left.split('\n');
+  const rightLines = right.split('\n');
+  
+  const dp = lcs(leftLines, rightLines);
+  const result: DiffResult['lines'] = [];
+  const stats = { additions: 0, deletions: 0, modifications: 0 };
+  
+  let i = leftLines.length;
+  let j = rightLines.length;
+  let leftLineNum = leftLines.length;
+  let rightLineNum = rightLines.length;
+  
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && leftLines[i - 1] === rightLines[j - 1]) {
+      // Unchanged line
+      result.unshift({
+        type: 'unchanged',
+        leftLine: leftLineNum,
+        rightLine: rightLineNum,
+        leftContent: [{ type: 'unchanged', text: leftLines[i - 1] }],
+        rightContent: [{ type: 'unchanged', text: rightLines[j - 1] }]
+      });
+      i--;
+      j--;
+      leftLineNum--;
+      rightLineNum--;
+    } else if (i > 0 && j > 0 && 
+               leftLines[i - 1].trim() !== '' && 
+               rightLines[j - 1].trim() !== '' &&
+               leftLines[i - 1].length > 0 && 
+               rightLines[j - 1].length > 0) {
+      // Potentially modified line - check similarity
+      const similarity = leftLines[i - 1].length + rightLines[j - 1].length > 0 ? 
+        (2 * lcs(leftLines[i - 1].split(''), rightLines[j - 1].split(''))[leftLines[i - 1].length][rightLines[j - 1].length]) / 
+        (leftLines[i - 1].length + rightLines[j - 1].length) : 0;
+      
+      if (similarity > 0.3) {
+        // Modified line
+        const { leftSegments, rightSegments } = wordDiff(leftLines[i - 1], rightLines[j - 1]);
+        result.unshift({
+          type: 'modified',
+          leftLine: leftLineNum,
+          rightLine: rightLineNum,
+          leftContent: leftSegments,
+          rightContent: rightSegments
+        });
+        stats.modifications++;
+        i--;
+        j--;
+        leftLineNum--;
+        rightLineNum--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        // Added line
+        result.unshift({
+          type: 'added',
+          leftLine: null,
+          rightLine: rightLineNum,
+          leftContent: [],
+          rightContent: [{ type: 'added', text: rightLines[j - 1] }]
+        });
+        stats.additions++;
+        j--;
+        rightLineNum--;
+      } else {
+        // Deleted line
+        result.unshift({
+          type: 'deleted',
+          leftLine: leftLineNum,
+          rightLine: null,
+          leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
+          rightContent: []
+        });
+        stats.deletions++;
+        i--;
+        leftLineNum--;
+      }
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      // Added line
+      result.unshift({
+        type: 'added',
+        leftLine: null,
+        rightLine: rightLineNum,
+        leftContent: [],
+        rightContent: [{ type: 'added', text: rightLines[j - 1] }]
+      });
+      stats.additions++;
+      j--;
+      rightLineNum--;
+    } else if (i > 0) {
+      // Deleted line
+      result.unshift({
+        type: 'deleted',
+        leftLine: leftLineNum,
+        rightLine: null,
+        leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
+        rightContent: []
+      });
+      stats.deletions++;
+      i--;
+      leftLineNum--;
+    }
+  }
+  
+  return { lines: result, stats };
 };
 
 const getLineClassName = (type: string): string => {
-  return "";
+  switch (type) {
+    case 'added':
+      return 'bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500';
+    case 'deleted':
+      return 'bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500';
+    case 'modified':
+      return 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500';
+    default:
+      return '';
+  }
 };
 
 const getSegmentClassName = (type: string): string => {
-  return "";
+  switch (type) {
+    case 'added':
+      return 'bg-green-200 dark:bg-green-800/60';
+    case 'deleted':
+      return 'bg-red-200 dark:bg-red-800/60';
+    default:
+      return '';
+  }
 };
 
 const renderWhitespace = (text: string): string => {
-  return text;
+  return text
+    .replace(/ /g, '·')
+    .replace(/\t/g, '→');
 };
 import { cn } from "@/lib/utils";
 

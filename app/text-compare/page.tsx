@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { diffLines, diffWordsWithSpace } from "diff";
+import { useCallback, useEffect, useState } from "react";
 // Text comparison algorithm implementation
 type DiffResult = {
   lines: Array<{
-    type: 'unchanged' | 'modified' | 'added' | 'deleted';
+    type: "unchanged" | "modified" | "added" | "deleted";
     leftLine: number | null;
     rightLine: number | null;
-    leftContent: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
-    rightContent: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
+    leftContent: Array<{
+      type: "unchanged" | "added" | "deleted";
+      text: string;
+    }>;
+    rightContent: Array<{
+      type: "unchanged" | "added" | "deleted";
+      text: string;
+    }>;
   }>;
   stats: {
     additions: number;
@@ -23,230 +30,224 @@ type DiffResult = {
   };
 };
 
-// Longest Common Subsequence for line matching
-function lcs(left: string[], right: string[]): number[][] {
-  const m = left.length;
-  const n = right.length;
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-  
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (left[i - 1] === right[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-  }
-  return dp;
+// Whitespace normalization function
+function normalizeWhitespace(s: string): string {
+  return s.replace(/[ \t]+/g, " ").trimEnd();
 }
 
-// Character-level diff for precise word matching
-function charDiff(left: string, right: string): {
-  leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
-  rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>;
+// Word-level diff using jsdiff for cleaner JSON/code highlighting
+function wordDiff(
+  left: string,
+  right: string
+): {
+  leftSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }>;
+  rightSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }>;
 } {
-  const leftChars = left.split('');
-  const rightChars = right.split('');
-  
-  const dp = lcs(leftChars, rightChars);
-  const leftSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
-  const rightSegments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
-  
-  let i = leftChars.length;
-  let j = rightChars.length;
-  
-  // Build segments by backtracking through LCS
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && leftChars[i - 1] === rightChars[j - 1]) {
-      leftSegments.unshift({ type: 'unchanged', text: leftChars[i - 1] });
-      rightSegments.unshift({ type: 'unchanged', text: rightChars[j - 1] });
-      i--;
-      j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      rightSegments.unshift({ type: 'added', text: rightChars[j - 1] });
-      j--;
-    } else if (i > 0) {
-      leftSegments.unshift({ type: 'deleted', text: leftChars[i - 1] });
-      i--;
+  const changes = diffWordsWithSpace(left, right);
+  const leftSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }> = [];
+  const rightSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }> = [];
+
+  for (const change of changes) {
+    if (change.added) {
+      rightSegments.push({ type: "added", text: change.value });
+    } else if (change.removed) {
+      leftSegments.push({ type: "deleted", text: change.value });
+    } else {
+      leftSegments.push({ type: "unchanged", text: change.value });
+      rightSegments.push({ type: "unchanged", text: change.value });
     }
   }
-  
-  // Merge consecutive segments of the same type
-  const mergeSegments = (segments: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }>) => {
-    const merged: Array<{ type: 'unchanged' | 'added' | 'deleted'; text: string }> = [];
-    let current: { type: 'unchanged' | 'added' | 'deleted'; text: string } | null = null;
-    
-    for (const segment of segments) {
-      if (current && current.type === segment.type) {
-        current.text += segment.text;
-      } else {
-        if (current) merged.push(current);
-        current = { ...segment };
-      }
-    }
-    if (current) merged.push(current);
-    
-    return merged;
-  };
-  
-  return {
-    leftSegments: mergeSegments(leftSegments),
-    rightSegments: mergeSegments(rightSegments)
-  };
+
+  return { leftSegments, rightSegments };
 }
 
 const computeTextDiff = (left: string, right: string): DiffResult => {
-  const leftLines = left.split('\n');
-  const rightLines = right.split('\n');
-  
-  const dp = lcs(leftLines, rightLines);
-  const result: DiffResult['lines'] = [];
+  // Keep original lines for display
+  const leftLines = left.split("\n");
+  const rightLines = right.split("\n");
+
+  // Normalize for comparison only
+  const normalizedLeft = leftLines.map(normalizeWhitespace).join("\n");
+  const normalizedRight = rightLines.map(normalizeWhitespace).join("\n");
+
+  // Use jsdiff for line-level diffing with ignoreWhitespace for better matching
+  const changes = diffLines(normalizedLeft, normalizedRight, {
+    ignoreWhitespace: true,
+  });
+
+  const result: DiffResult["lines"] = [];
   const stats = { additions: 0, deletions: 0, modifications: 0 };
-  
-  let i = leftLines.length;
-  let j = rightLines.length;
-  let leftLineNum = leftLines.length;
-  let rightLineNum = rightLines.length;
-  
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && leftLines[i - 1] === rightLines[j - 1]) {
-      // Unchanged line
-      result.unshift({
-        type: 'unchanged',
-        leftLine: leftLineNum,
-        rightLine: rightLineNum,
-        leftContent: [{ type: 'unchanged', text: leftLines[i - 1] }],
-        rightContent: [{ type: 'unchanged', text: rightLines[j - 1] }]
-      });
-      i--;
-      j--;
-      leftLineNum--;
-      rightLineNum--;
-    } else if (i > 0 && j > 0 && 
-               leftLines[i - 1].trim() !== '' && 
-               rightLines[j - 1].trim() !== '' &&
-               leftLines[i - 1].length > 0 && 
-               rightLines[j - 1].length > 0) {
-      // Potentially modified line - check similarity
-      const similarity = leftLines[i - 1].length + rightLines[j - 1].length > 0 ? 
-        (2 * lcs(leftLines[i - 1].split(''), rightLines[j - 1].split(''))[leftLines[i - 1].length][rightLines[j - 1].length]) / 
-        (leftLines[i - 1].length + rightLines[j - 1].length) : 0;
-      
-      if (similarity > 0.3) {
-        // Modified line
-        const { leftSegments, rightSegments } = charDiff(leftLines[i - 1], rightLines[j - 1]);
-        result.unshift({
-          type: 'modified',
-          leftLine: leftLineNum,
-          rightLine: rightLineNum,
-          leftContent: leftSegments,
-          rightContent: rightSegments
-        });
-        stats.modifications++;
-        i--;
-        j--;
-        leftLineNum--;
-        rightLineNum--;
-      } else {
-        // For non-similar lines, check which direction has better LCS score
-        const leftScore = i > 0 ? dp[i - 1][j] : 0;
-        const rightScore = j > 0 ? dp[i][j - 1] : 0;
-        
-        if (rightScore > leftScore) {
-          // Added line (right has better score)
-          result.unshift({
-            type: 'added',
-            leftLine: null,
-            rightLine: rightLineNum,
-            leftContent: [],
-            rightContent: [{ type: 'added', text: rightLines[j - 1] }]
-          });
-          stats.additions++;
-          j--;
-          rightLineNum--;
-        } else {
-          // Deleted line (left has better score or equal)
-          result.unshift({
-            type: 'deleted',
-            leftLine: leftLineNum,
-            rightLine: null,
-            leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
-            rightContent: []
-          });
-          stats.deletions++;
-          i--;
-          leftLineNum--;
-        }
-      }
-    } else {
-      // Handle remaining lines when one text is exhausted
-      if (j > 0) {
-        // Added line
-        result.unshift({
-          type: 'added',
+
+  let leftLineIndex = 0;
+  let rightLineIndex = 0;
+
+  for (const change of changes) {
+    const lines = change.value.split("\n");
+    // Remove empty last line if it exists (from split behavior)
+    if (lines[lines.length - 1] === "") {
+      lines.pop();
+    }
+
+    if (change.added) {
+      // Added lines - use original text
+      for (let i = 0; i < lines.length; i++) {
+        const originalLine = rightLines[rightLineIndex + i] || lines[i];
+        result.push({
+          type: "added",
           leftLine: null,
-          rightLine: rightLineNum,
+          rightLine: rightLineIndex + i + 1,
           leftContent: [],
-          rightContent: [{ type: 'added', text: rightLines[j - 1] }]
+          rightContent: [{ type: "added", text: originalLine }],
         });
         stats.additions++;
-        j--;
-        rightLineNum--;
-      } else if (i > 0) {
-        // Deleted line
-        result.unshift({
-          type: 'deleted',
-          leftLine: leftLineNum,
+      }
+      rightLineIndex += lines.length;
+    } else if (change.removed) {
+      // Deleted lines - use original text
+      for (let i = 0; i < lines.length; i++) {
+        const originalLine = leftLines[leftLineIndex + i] || lines[i];
+        result.push({
+          type: "deleted",
+          leftLine: leftLineIndex + i + 1,
           rightLine: null,
-          leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
-          rightContent: []
+          leftContent: [{ type: "deleted", text: originalLine }],
+          rightContent: [],
         });
         stats.deletions++;
-        i--;
-        leftLineNum--;
       }
+      leftLineIndex += lines.length;
+    } else {
+      // Unchanged lines - use original text
+      for (let i = 0; i < lines.length; i++) {
+        const originalLeftLine = leftLines[leftLineIndex + i] || lines[i];
+        const originalRightLine = rightLines[rightLineIndex + i] || lines[i];
+        result.push({
+          type: "unchanged",
+          leftLine: leftLineIndex + i + 1,
+          rightLine: rightLineIndex + i + 1,
+          leftContent: [{ type: "unchanged", text: originalLeftLine }],
+          rightContent: [{ type: "unchanged", text: originalRightLine }],
+        });
+      }
+      leftLineIndex += lines.length;
+      rightLineIndex += lines.length;
     }
   }
-  
-  return { lines: result, stats };
+
+  // Post-process to identify modified lines with smart lookahead search
+  const processedResult: DiffResult["lines"] = [];
+  const processed = new Set<number>(); // Track processed indices
+
+  for (let i = 0; i < result.length; i++) {
+    if (processed.has(i)) continue; // Skip already processed items
+
+    const current = result[i];
+
+    if (current.type === "deleted") {
+      // Look ahead up to 3 entries for a matching added line
+      let foundMatch = false;
+      for (let j = i + 1; j < Math.min(i + 4, result.length); j++) {
+        if (processed.has(j)) continue;
+
+        const candidate = result[j];
+        if (candidate.type === "added") {
+          const leftText = current.leftContent[0]?.text || "";
+          const rightText = candidate.rightContent[0]?.text || "";
+
+          if (leftText.trim() && rightText.trim()) {
+            // Use word-level diff to determine if it's a modification
+            const { leftSegments, rightSegments } = wordDiff(
+              leftText,
+              rightText
+            );
+
+            // Count unchanged words for better similarity scoring
+            const unchangedWords = leftSegments
+              .filter((s) => s.type === "unchanged")
+              .reduce((sum, s) => sum + s.text.split(/\s+/).length, 0);
+            const totalWords = Math.max(
+              leftText.split(/\s+/).length,
+              rightText.split(/\s+/).length
+            );
+            const similarity = totalWords > 0 ? unchangedWords / totalWords : 0;
+
+            // Use 50% similarity threshold for more accurate detection
+            if (similarity > 0.5) {
+              // Treat as modification
+              processedResult.push({
+                type: "modified",
+                leftLine: current.leftLine,
+                rightLine: candidate.rightLine,
+                leftContent: leftSegments,
+                rightContent: rightSegments,
+              });
+              stats.modifications++;
+              stats.deletions--;
+              stats.additions--;
+              processed.add(i); // Mark current as processed
+              processed.add(j); // Mark matched candidate as processed
+              foundMatch = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!foundMatch) {
+        processedResult.push(current);
+      }
+    } else {
+      processedResult.push(current);
+    }
+  }
+
+  return { lines: processedResult, stats };
 };
 
 const getLineClassName = (type: string): string => {
   // Only return empty string - no background colors for text content
-  return '';
+  return "";
 };
 
 const getLineNumberClassName = (type: string): string => {
   switch (type) {
-    case 'added':
-      return 'border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30';
-    case 'deleted':
-      return 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/30';
-    case 'modified':
-      return 'border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30';
+    case "added":
+      return "border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30";
+    case "deleted":
+      return "border-l-4 border-red-500 bg-red-50 dark:bg-red-900/30";
+    case "modified":
+      return "border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30";
     default:
-      return 'border-l-4 border-transparent';
+      return "border-l-4 border-transparent";
   }
 };
 
 const getSegmentClassName = (type: string): string => {
   switch (type) {
-    case 'added':
-      return 'bg-green-200 dark:bg-green-800/60';
-    case 'deleted':
-      return 'bg-red-200 dark:bg-red-800/60';
+    case "added":
+      return "bg-green-200 dark:bg-green-800/60";
+    case "deleted":
+      return "bg-red-200 dark:bg-red-800/60";
     default:
-      return '';
+      return "";
   }
 };
 
 const renderWhitespace = (text: string): string => {
-  return text
-    .replace(/ /g, '·')
-    .replace(/\t/g, '→');
+  return text.replace(/ /g, "·").replace(/\t/g, "→");
 };
-import { cn } from "@/lib/utils";
 
 const SAMPLE_TEXT_LEFT = `Welcome to the comparison tool
 This line will be modified slightly
@@ -440,10 +441,12 @@ export default function TextCompare() {
                         key={index}
                         className="flex items-start text-sm min-h-[1.5rem]"
                       >
-                        <span className={cn(
-                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
-                          getLineNumberClassName(line.type)
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
+                            getLineNumberClassName(line.type)
+                          )}
+                        >
                           {line.leftLine || "\u00A0"}
                         </span>
                         <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">
@@ -482,10 +485,12 @@ export default function TextCompare() {
                         key={index}
                         className="flex items-start text-sm min-h-[1.5rem]"
                       >
-                        <span className={cn(
-                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
-                          getLineNumberClassName(line.type)
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
+                            getLineNumberClassName(line.type)
+                          )}
+                        >
                           {line.rightLine || "\u00A0"}
                         </span>
                         <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">

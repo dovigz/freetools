@@ -312,11 +312,13 @@ export default function TextCompare() {
     const temp = leftText;
     setLeftText(rightText);
     setRightText(temp);
+    setDiffResult(null); // Clear diff result when switching
   }, [leftText, rightText]);
 
   const loadSampleTexts = useCallback(() => {
     setLeftText(SAMPLE_TEXT_LEFT);
     setRightText(SAMPLE_TEXT_RIGHT);
+    setDiffResult(null); // Clear diff result when loading samples
   }, []);
 
   return (

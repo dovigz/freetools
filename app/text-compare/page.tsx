@@ -204,15 +204,20 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
 };
 
 const getLineClassName = (type: string): string => {
+  // Only return empty string - no background colors for text content
+  return '';
+};
+
+const getLineNumberClassName = (type: string): string => {
   switch (type) {
     case 'added':
-      return 'bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500';
+      return 'border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30';
     case 'deleted':
-      return 'bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500';
+      return 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/30';
     case 'modified':
-      return 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500';
+      return 'border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30';
     default:
-      return '';
+      return 'border-l-4 border-transparent';
   }
 };
 
@@ -422,15 +427,15 @@ export default function TextCompare() {
                     {diffResult.lines.map((line, index) => (
                       <div
                         key={index}
-                        className={cn(
-                          "flex items-start gap-3 py-1 px-2 rounded text-sm min-h-[1.5rem]",
-                          getLineClassName(line.type)
-                        )}
+                        className="flex items-start text-sm min-h-[1.5rem]"
                       >
-                        <span className="text-xs text-muted-foreground min-w-[2rem] text-right flex-shrink-0">
+                        <span className={cn(
+                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2",
+                          getLineNumberClassName(line.type)
+                        )}>
                           {line.leftLine || ""}
                         </span>
-                        <div className="font-mono flex-1 whitespace-pre-wrap break-all">
+                        <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">
                           {line.leftContent.length > 0 ? (
                             line.leftContent.map((segment, segIndex) => (
                               <span
@@ -464,15 +469,15 @@ export default function TextCompare() {
                     {diffResult.lines.map((line, index) => (
                       <div
                         key={index}
-                        className={cn(
-                          "flex items-start gap-3 py-1 px-2 rounded text-sm min-h-[1.5rem]",
-                          getLineClassName(line.type)
-                        )}
+                        className="flex items-start text-sm min-h-[1.5rem]"
                       >
-                        <span className="text-xs text-muted-foreground min-w-[2rem] text-right flex-shrink-0">
+                        <span className={cn(
+                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2",
+                          getLineNumberClassName(line.type)
+                        )}>
                           {line.rightLine || ""}
                         </span>
-                        <div className="font-mono flex-1 whitespace-pre-wrap break-all">
+                        <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">
                           {line.rightContent.length > 0 ? (
                             line.rightContent.map((segment, segIndex) => (
                               <span

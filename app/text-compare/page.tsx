@@ -430,10 +430,10 @@ export default function TextCompare() {
                         className="flex items-start text-sm min-h-[1.5rem]"
                       >
                         <span className={cn(
-                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2",
+                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
                           getLineNumberClassName(line.type)
                         )}>
-                          {line.leftLine || ""}
+                          {line.leftLine || "\u00A0"}
                         </span>
                         <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">
                           {line.leftContent.length > 0 ? (
@@ -448,7 +448,7 @@ export default function TextCompare() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-muted-foreground italic text-xs">
+                            <span className="text-muted-foreground italic text-xs select-none py-1">
                               (line not present)
                             </span>
                           )}
@@ -472,10 +472,10 @@ export default function TextCompare() {
                         className="flex items-start text-sm min-h-[1.5rem]"
                       >
                         <span className={cn(
-                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2",
+                          "text-xs text-muted-foreground min-w-[3rem] text-right flex-shrink-0 py-1 px-2 mr-2 select-none",
                           getLineNumberClassName(line.type)
                         )}>
-                          {line.rightLine || ""}
+                          {line.rightLine || "\u00A0"}
                         </span>
                         <div className="font-mono flex-1 whitespace-pre-wrap break-all py-1 select-text">
                           {line.rightContent.length > 0 ? (
@@ -490,7 +490,7 @@ export default function TextCompare() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-muted-foreground italic text-xs">
+                            <span className="text-muted-foreground italic text-xs select-none py-1">
                               (line not present)
                             </span>
                           )}

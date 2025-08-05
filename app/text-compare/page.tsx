@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { diffLines, diffWordsWithSpace } from "diff";
+import { diffChars, diffLines, diffWordsWithSpace } from "diff";
 import { useCallback, useEffect, useState } from "react";
 // Text comparison algorithm implementation
 type DiffResult = {
@@ -33,6 +33,53 @@ type DiffResult = {
 // Whitespace normalization function
 function normalizeWhitespace(s: string): string {
   return s.replace(/[ \t]+/g, " ").trimEnd();
+}
+
+// Check if two strings have significant whitespace differences
+function hasSignificantWhitespaceChanges(left: string, right: string): boolean {
+  // If normalized versions are the same but originals differ, it's whitespace-only
+  const normalizedLeft = normalizeWhitespace(left);
+  const normalizedRight = normalizeWhitespace(right);
+  
+  return normalizedLeft === normalizedRight && left !== right;
+}
+
+// Character-level diff for precise whitespace highlighting
+function charDiff(
+  left: string,
+  right: string
+): {
+  leftSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }>;
+  rightSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }>;
+} {
+  const changes = diffChars(left, right);
+  const leftSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }> = [];
+  const rightSegments: Array<{
+    type: "unchanged" | "added" | "deleted";
+    text: string;
+  }> = [];
+
+  for (const change of changes) {
+    if (change.added) {
+      rightSegments.push({ type: "added", text: change.value });
+    } else if (change.removed) {
+      leftSegments.push({ type: "deleted", text: change.value });
+    } else {
+      leftSegments.push({ type: "unchanged", text: change.value });
+      rightSegments.push({ type: "unchanged", text: change.value });
+    }
+  }
+
+  return { leftSegments, rightSegments };
 }
 
 // Word-level diff using jsdiff for cleaner JSON/code highlighting
@@ -129,17 +176,33 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
       }
       leftLineIndex += lines.length;
     } else {
-      // Unchanged lines - use original text
+      // Unchanged lines - use original text, but check for whitespace-only changes
       for (let i = 0; i < lines.length; i++) {
         const originalLeftLine = leftLines[leftLineIndex + i] || lines[i];
         const originalRightLine = rightLines[rightLineIndex + i] || lines[i];
-        result.push({
-          type: "unchanged",
-          leftLine: leftLineIndex + i + 1,
-          rightLine: rightLineIndex + i + 1,
-          leftContent: [{ type: "unchanged", text: originalLeftLine }],
-          rightContent: [{ type: "unchanged", text: originalRightLine }],
-        });
+        
+        // Check if this is actually a whitespace-only modification
+        if (hasSignificantWhitespaceChanges(originalLeftLine, originalRightLine)) {
+          // Convert to modification with character-level diff for precise whitespace highlighting
+          const { leftSegments, rightSegments } = charDiff(originalLeftLine, originalRightLine);
+          result.push({
+            type: "modified",
+            leftLine: leftLineIndex + i + 1,
+            rightLine: rightLineIndex + i + 1,
+            leftContent: leftSegments,
+            rightContent: rightSegments,
+          });
+          stats.modifications++;
+        } else {
+          // Truly unchanged line
+          result.push({
+            type: "unchanged",
+            leftLine: leftLineIndex + i + 1,
+            rightLine: rightLineIndex + i + 1,
+            leftContent: [{ type: "unchanged", text: originalLeftLine }],
+            rightContent: [{ type: "unchanged", text: originalRightLine }],
+          });
+        }
       }
       leftLineIndex += lines.length;
       rightLineIndex += lines.length;

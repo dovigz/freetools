@@ -148,7 +148,40 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
         j--;
         leftLineNum--;
         rightLineNum--;
-      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      } else {
+        // For non-similar lines, check which direction has better LCS score
+        const leftScore = i > 0 ? dp[i - 1][j] : 0;
+        const rightScore = j > 0 ? dp[i][j - 1] : 0;
+        
+        if (rightScore > leftScore) {
+          // Added line (right has better score)
+          result.unshift({
+            type: 'added',
+            leftLine: null,
+            rightLine: rightLineNum,
+            leftContent: [],
+            rightContent: [{ type: 'added', text: rightLines[j - 1] }]
+          });
+          stats.additions++;
+          j--;
+          rightLineNum--;
+        } else {
+          // Deleted line (left has better score or equal)
+          result.unshift({
+            type: 'deleted',
+            leftLine: leftLineNum,
+            rightLine: null,
+            leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
+            rightContent: []
+          });
+          stats.deletions++;
+          i--;
+          leftLineNum--;
+        }
+      }
+    } else {
+      // Handle remaining lines when one text is exhausted
+      if (j > 0) {
         // Added line
         result.unshift({
           type: 'added',
@@ -160,7 +193,7 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
         stats.additions++;
         j--;
         rightLineNum--;
-      } else {
+      } else if (i > 0) {
         // Deleted line
         result.unshift({
           type: 'deleted',
@@ -173,30 +206,6 @@ const computeTextDiff = (left: string, right: string): DiffResult => {
         i--;
         leftLineNum--;
       }
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      // Added line
-      result.unshift({
-        type: 'added',
-        leftLine: null,
-        rightLine: rightLineNum,
-        leftContent: [],
-        rightContent: [{ type: 'added', text: rightLines[j - 1] }]
-      });
-      stats.additions++;
-      j--;
-      rightLineNum--;
-    } else if (i > 0) {
-      // Deleted line
-      result.unshift({
-        type: 'deleted',
-        leftLine: leftLineNum,
-        rightLine: null,
-        leftContent: [{ type: 'deleted', text: leftLines[i - 1] }],
-        rightContent: []
-      });
-      stats.deletions++;
-      i--;
-      leftLineNum--;
     }
   }
   

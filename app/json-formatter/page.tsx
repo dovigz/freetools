@@ -37,9 +37,9 @@ export default function JSONFormatter() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-900 overflow-hidden rounded-lg">
       {/* Top toolbar */}
-      <div className="flex-shrink-0 flex items-center justify-between p-4 bg-slate-800 border-b border-slate-600">
+      <div className="flex-shrink-0 flex items-center justify-between p-4 bg-slate-800 border-b border-slate-600 rounded-t-lg">
         <div className="flex items-center gap-4 min-w-0">
           <h1 className="text-xl font-bold text-white flex-shrink-0">JSON Hero</h1>
           

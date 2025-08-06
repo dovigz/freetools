@@ -104,12 +104,12 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#7c3aed" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
-      <body className={inter.className + " bg-gray-50"}>
+      <body className={inter.className + " bg-gray-50 overflow-hidden"}>
         <GoogleAnalytics />
         <SidebarProvider>
-          <div>
-            {/* Header - Full viewport width */}
-            <div className="sticky top-0 z-50 bg-white w-screen">
+          <div className="h-screen flex flex-col w-full">
+            {/* Header - Fixed at top, full viewport width */}
+            <div className="flex-shrink-0 sticky top-0 z-50 bg-white w-screen">
               <MainHeader />
             </div>
 
@@ -127,11 +127,11 @@ export default function RootLayout({
               </div>
             </Link>
 
-            {/* Main layout with sidebar */}
-            <div className="flex min-h-screen w-full">
+            {/* Main layout with sidebar - fills remaining height and full width */}
+            <div className="flex flex-1 min-h-0 w-screen">
               <AppSidebar />
-              <div className="flex-1 flex flex-col min-h-screen">
-                <main className="flex-1 p-4 lg:p-6">{children}</main>
+              <div className="flex-1 flex flex-col min-h-0 min-w-0">
+                <main className="flex-1 p-4 lg:p-6 overflow-auto w-full">{children}</main>
               </div>
             </div>
           </div>

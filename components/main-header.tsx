@@ -9,13 +9,7 @@ export function MainHeader() {
   return (
     <>
       <header
-        className={`w-full flex items-center justify-between px-3 sm:px-4 lg:pr-6 h-16 border-b bg-white/95 backdrop-blur-sm shadow-sm ${
-          !isMobile
-            ? sidebarState === "expanded"
-              ? "md:pl-64"
-              : "md:pl-12"
-            : ""
-        }`}
+        className="w-full flex items-center justify-between px-3 sm:px-4 lg:pr-6 h-16 border-b bg-white/95 backdrop-blur-sm shadow-sm"
       >
         {/* Left: Sidebar trigger and logo */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">

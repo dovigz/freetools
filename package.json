@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
@@ -51,6 +52,7 @@
     "react-day-picker": "latest",
     "react-dom": "^19",
     "react-hook-form": "latest",
+    "react-json-tree": "^0.20.0",
     "react-resizable-panels": "latest",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",

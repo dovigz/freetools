@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   ChevronRight, 
@@ -161,6 +161,7 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
 
 export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, className }: JSONHeroViewProps) {
   const [activeTab, setActiveTab] = useState<'json' | 'schema'>('json');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const rootNodes = useMemo(() => {
     if (!data) return [];
@@ -241,6 +242,42 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
     }
   }, [currentValue]);
 
+  // Auto-scroll logic to center the currently selected column
+  useEffect(() => {
+    if (!scrollContainerRef.current || columns.length === 0) return;
+
+    const container = scrollContainerRef.current;
+    const selectedColumnIndex = Math.min(selectedPath.length, columns.length - 1);
+    
+    // Calculate scroll position to center the selected column
+    const COLUMN_WIDTH = 320; // w-80 = 320px
+    const containerWidth = container.clientWidth;
+    
+    // Don't auto-scroll if container is too narrow (mobile)
+    if (containerWidth < COLUMN_WIDTH * 1.5) return;
+    
+    // Target position: center the selected column in the viewport
+    const targetScrollLeft = (selectedColumnIndex * COLUMN_WIDTH) - (containerWidth / 2) + (COLUMN_WIDTH / 2);
+    
+    // Clamp to valid scroll range
+    const maxScrollLeft = Math.max(0, container.scrollWidth - containerWidth);
+    const clampedScrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft));
+    
+    // Only scroll if we're not already close to the target position
+    const currentScrollLeft = container.scrollLeft;
+    const threshold = containerWidth < 800 ? 30 : 50; // Smaller threshold on smaller screens
+    
+    if (Math.abs(currentScrollLeft - clampedScrollLeft) > threshold) {
+      // Use a small delay to ensure DOM updates are complete
+      requestAnimationFrame(() => {
+        container.scrollTo({
+          left: clampedScrollLeft,
+          behavior: 'smooth'
+        });
+      });
+    }
+  }, [selectedPath, columns.length]);
+
   if (!data) {
     return (
       <div className={cn("h-full flex items-center justify-center bg-slate-800", className)}>
@@ -251,7 +288,7 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
 
   return (
     <div className={cn("h-full flex bg-slate-800 overflow-hidden", className)}>
-      <div className="flex h-full overflow-x-auto">
+      <div ref={scrollContainerRef} className="flex h-full overflow-x-auto scroll-smooth json-scroll">
         {/* Navigation columns */}
         {columns.map((column, index) => (
           <JSONColumn

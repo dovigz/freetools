@@ -37,7 +37,7 @@ export default function JSONFormatter() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-900 overflow-hidden rounded-lg">
+    <div className="h-full flex flex-col bg-slate-900 overflow-hidden rounded-lg min-h-0">
       {/* Top toolbar */}
       <div className="flex-shrink-0 flex items-center justify-between p-4 bg-slate-800 border-b border-slate-600 rounded-t-lg">
         <div className="flex items-center gap-4 min-w-0">

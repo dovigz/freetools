@@ -92,7 +92,7 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
       </div>
 
       {/* Column Content */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-0">
           {nodes.map((node, index) => {
             const isSelected = selectedPath[columnIndex] === node.key;
@@ -250,8 +250,8 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
   }
 
   return (
-    <div className={cn("h-full flex bg-slate-800", className)}>
-      <div className="flex h-full">
+    <div className={cn("h-full flex bg-slate-800 overflow-hidden", className)}>
+      <div className="flex h-full overflow-x-auto">
         {/* Navigation columns */}
         {columns.map((column, index) => (
           <JSONColumn
@@ -307,7 +307,7 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
               </div>
             </div>
             
-            <div className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-3">
                 {activeTab === 'json' ? (
                   <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">

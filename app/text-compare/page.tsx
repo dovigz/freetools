@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 
 // Import difflib
-const difflib = require('difflib');
+import difflib from "difflib";
 
 // Types for the improved algorithm
 type DiffSegment = {
@@ -36,23 +36,26 @@ type DiffResult = {
 
 // Normalize lines by collapsing whitespace and trimming trailing spaces
 function normalizeLine(s: string): string {
-  const collapsed = s.replace(/[\t ]+/g, ' ');
+  const collapsed = s.replace(/[\t ]+/g, " ");
   return collapsed.trimEnd();
 }
 
 // Character-level diff for a single line pair
-function charDiff(left: string, right: string): {
+function charDiff(
+  left: string,
+  right: string
+): {
   leftSeg: DiffSegment[];
   rightSeg: DiffSegment[];
 } {
   // Use SequenceMatcher on arrays of characters
-  const sm = new difflib.SequenceMatcher(null, left.split(''), right.split(''));
-  
+  const sm = new difflib.SequenceMatcher(null, left.split(""), right.split(""));
+
   // If similarity is 50% or less, treat the whole strings as different
   if (sm.ratio() <= 0.5) {
     return {
-      leftSeg: left ? [{ type: 'deleted', text: left }] : [],
-      rightSeg: right ? [{ type: 'added', text: right }] : []
+      leftSeg: left ? [{ type: "deleted", text: left }] : [],
+      rightSeg: right ? [{ type: "added", text: right }] : [],
     };
   }
 
@@ -61,21 +64,21 @@ function charDiff(left: string, right: string): {
   const opcodes = sm.getOpcodes();
 
   for (const [tag, i1, i2, j1, j2] of opcodes) {
-    if (tag === 'equal') {
+    if (tag === "equal") {
       const text = left.substring(i1, i2);
-      leftSeg.push({ type: 'unchanged', text });
-      rightSeg.push({ type: 'unchanged', text });
-    } else if (tag === 'delete') {
+      leftSeg.push({ type: "unchanged", text });
+      rightSeg.push({ type: "unchanged", text });
+    } else if (tag === "delete") {
       const delText = left.substring(i1, i2);
-      leftSeg.push({ type: 'deleted', text: delText });
-    } else if (tag === 'insert') {
+      leftSeg.push({ type: "deleted", text: delText });
+    } else if (tag === "insert") {
       const insText = right.substring(j1, j2);
-      rightSeg.push({ type: 'added', text: insText });
-    } else if (tag === 'replace') {
+      rightSeg.push({ type: "added", text: insText });
+    } else if (tag === "replace") {
       const repL = left.substring(i1, i2);
       const repR = right.substring(j1, j2);
-      if (repL) leftSeg.push({ type: 'deleted', text: repL });
-      if (repR) rightSeg.push({ type: 'added', text: repR });
+      if (repL) leftSeg.push({ type: "deleted", text: repL });
+      if (repR) rightSeg.push({ type: "added", text: repR });
     }
   }
 
@@ -100,21 +103,21 @@ function charDiff(left: string, right: string): {
 
 // Main line-level diff using the new algorithm
 function diffLines(leftText: string, rightText: string): DiffResult {
-  const leftLines = leftText.split('\n');
-  const rightLines = rightText.split('\n');
-  
+  const leftLines = leftText.split("\n");
+  const rightLines = rightText.split("\n");
+
   // Build normalised keys for aligning lines
   const leftKeys = leftLines.map(normalizeLine);
   const rightKeys = rightLines.map(normalizeLine);
-  
+
   const sm = new difflib.SequenceMatcher(null, leftKeys, rightKeys);
   const opcodes = sm.getOpcodes();
-  
+
   const result: DiffLine[] = [];
   const stats = { additions: 0, deletions: 0, modifications: 0 };
 
   for (const [tag, i1, i2, j1, j2] of opcodes) {
-    if (tag === 'equal') {
+    if (tag === "equal") {
       // If the original lines differ (e.g. whitespace), treat as modified
       for (let k = 0; k < i2 - i1; k++) {
         const li = i1 + k;
@@ -123,79 +126,79 @@ function diffLines(leftText: string, rightText: string): DiffResult {
         const rightTextLine = rightLines[ri];
         const lNum = li + 1;
         const rNum = ri + 1;
-        
+
         if (leftTextLine === rightTextLine) {
           result.push({
-            type: 'unchanged',
+            type: "unchanged",
             leftLine: lNum,
             rightLine: rNum,
-            leftSegments: [{ type: 'unchanged', text: leftTextLine }],
-            rightSegments: [{ type: 'unchanged', text: rightTextLine }]
+            leftSegments: [{ type: "unchanged", text: leftTextLine }],
+            rightSegments: [{ type: "unchanged", text: rightTextLine }],
           });
         } else {
           const segs = charDiff(leftTextLine, rightTextLine);
           result.push({
-            type: 'modified',
+            type: "modified",
             leftLine: lNum,
             rightLine: rNum,
             leftSegments: segs.leftSeg,
-            rightSegments: segs.rightSeg
+            rightSegments: segs.rightSeg,
           });
           stats.modifications++;
         }
       }
-    } else if (tag === 'replace') {
+    } else if (tag === "replace") {
       // In a replace block, emit one modified row per line on either side;
       // if counts differ, continue pairing with a blank line
       const delCount = i2 - i1;
       const insCount = j2 - j1;
       const maxCount = Math.max(delCount, insCount);
-      
+
       for (let p = 0; p < maxCount; p++) {
         const li = p < delCount ? i1 + p : null;
         const ri = p < insCount ? j1 + p : null;
         const lNum = li !== null ? li + 1 : null;
         const rNum = ri !== null ? ri + 1 : null;
-        const leftLineText = li !== null ? leftLines[li] : '';
-        const rightLineText = ri !== null ? rightLines[ri] : '';
-        
+        const leftLineText = li !== null ? leftLines[li] : "";
+        const rightLineText = ri !== null ? rightLines[ri] : "";
+
         const segs = charDiff(leftLineText, rightLineText);
         result.push({
-          type: 'modified',
+          type: "modified",
           leftLine: lNum,
           rightLine: rNum,
           leftSegments: segs.leftSeg,
-          rightSegments: segs.rightSeg
+          rightSegments: segs.rightSeg,
         });
         stats.modifications++;
       }
-    } else if (tag === 'delete') {
+    } else if (tag === "delete") {
       // Lines present only in the left text
       for (let d = 0; d < i2 - i1; d++) {
         const li = i1 + d;
         const lNum = li + 1;
         const delText = leftLines[li];
         result.push({
-          type: 'deleted',
+          type: "deleted",
           leftLine: lNum,
           rightLine: null,
-          leftSegments: [{ type: 'deleted', text: delText }],
-          rightSegments: []
+          leftSegments: [{ type: "deleted", text: delText }],
+          rightSegments: [],
         });
         stats.deletions++;
       }
-    } else if (tag === 'insert') {
+    } else if (tag === "insert") {
       // Lines present only in the right text
       for (let a = 0; a < j2 - j1; a++) {
         const ri = j1 + a;
         const rNum = ri + 1;
         const insText = rightLines[ri];
         result.push({
-          type: 'added',
+          type: "added",
           leftLine: null,
           rightLine: rNum,
           leftSegments: [],
-          rightSegments: [{ type: 'added', text: insText }]
+          rightSegments: [{ type: "added", text: insText }],
         });
         stats.additions++;
       }

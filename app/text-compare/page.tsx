@@ -238,7 +238,7 @@ const renderWhitespace = (text: string): string => {
   return text.replace(/ /g, "·").replace(/\t/g, "→");
 };
 
-const SAMPLE_TEXT_LEFT = `Welcome to the advanced comparison tool
+const SAMPLE_TEXT_LEFT = `Welcome to the comparison tool
 This line will be modified slightly
 This line stays exactly the same
 Line 4: Contains some    extra    spaces
@@ -251,7 +251,7 @@ Line with symbols: @#$%^&*()
 The quick brown fox jumps
 Shared ending line`;
 
-const SAMPLE_TEXT_RIGHT = `Welcome to the advanced comparison tool
+const SAMPLE_TEXT_RIGHT = `Welcome to the comparison tool
 This line will be modified significantly  
 This line stays exactly the same
 Line 4: Contains some  fewer  spaces
@@ -264,7 +264,7 @@ The quick brown fox jumps over the lazy dog
 Additional line at the end
 Shared ending line`;
 
-export default function TextCompare2() {
+export default function TextCompare() {
   const [leftText, setLeftText] = useState("");
   const [rightText, setRightText] = useState("");
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
@@ -273,19 +273,19 @@ export default function TextCompare2() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const savedLeft = localStorage.getItem("text-compare2-left");
-    const savedRight = localStorage.getItem("text-compare2-right");
+    const savedLeft = localStorage.getItem("text-compare-left");
+    const savedRight = localStorage.getItem("text-compare-right");
     if (savedLeft) setLeftText(savedLeft);
     if (savedRight) setRightText(savedRight);
   }, []);
 
   // Save to localStorage when text changes
   useEffect(() => {
-    localStorage.setItem("text-compare2-left", leftText);
+    localStorage.setItem("text-compare-left", leftText);
   }, [leftText]);
 
   useEffect(() => {
-    localStorage.setItem("text-compare2-right", rightText);
+    localStorage.setItem("text-compare-right", rightText);
   }, [rightText]);
 
   const handleCompare = useCallback(() => {
@@ -303,8 +303,8 @@ export default function TextCompare2() {
     setLeftText("");
     setRightText("");
     setDiffResult(null);
-    localStorage.removeItem("text-compare2-left");
-    localStorage.removeItem("text-compare2-right");
+    localStorage.removeItem("text-compare-left");
+    localStorage.removeItem("text-compare-right");
   }, []);
 
   const handleSwitchTexts = useCallback(() => {
@@ -324,9 +324,9 @@ export default function TextCompare2() {
     <div className="container mx-auto p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Text Compare 2</h1>
+          <h1 className="text-3xl font-bold mb-2">Text Compare</h1>
           <p className="text-muted-foreground">
-            Advanced text comparison with improved difflib-based algorithm for precise line and character matching
+            Compare two texts and find differences line by line
           </p>
         </div>
 
@@ -368,9 +368,9 @@ export default function TextCompare2() {
             <Button
               onClick={handleCompare}
               disabled={!leftText.trim() || !rightText.trim() || isComparing}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
             >
-              {isComparing ? "Comparing..." : "Compare with New Algorithm!"}
+              {isComparing ? "Comparing..." : "Compare!"}
             </Button>
             <Button variant="outline" onClick={handleSwitchTexts}>
               Switch Texts
@@ -397,7 +397,7 @@ export default function TextCompare2() {
         {diffResult && (
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Advanced Algorithm Results</h3>
+              <h3 className="font-medium">Comparison Results</h3>
               <div className="flex gap-2">
                 {diffResult.stats.additions > 0 && (
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
@@ -529,9 +529,6 @@ export default function TextCompare2() {
                     <span>Spaces & tabs visible</span>
                   </div>
                 )}
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">
-                Using advanced difflib-based algorithm with precise line matching and character-level diffing
               </div>
             </div>
           </Card>

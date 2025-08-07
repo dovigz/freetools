@@ -16,9 +16,10 @@ interface JSONImportDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   currentData?: any;
+  defaultTab?: "text" | "file";
 }
 
-export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpenChange, currentData }: JSONImportDialogProps) {
+export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpenChange, currentData, defaultTab = "text" }: JSONImportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   
@@ -157,7 +158,7 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
           <DialogTitle className="text-white">Import JSON</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="text" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-700 border border-slate-600">
             <TabsTrigger 
               value="text" 

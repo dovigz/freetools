@@ -98,7 +98,7 @@ export default function JSONFormatter() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <JSONImportDialog onImport={handleImportJSON} />
+          <JSONImportDialog onImport={handleImportJSON} defaultTab="file" />
         </div>
       </div>
 

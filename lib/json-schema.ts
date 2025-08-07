@@ -39,13 +39,61 @@ export function generateJSONSchema(data: any): any {
         const schema_arr: any = { type: 'array' };
         
         if (items.length > 0) {
-          // Try to infer item schema from first few items
-          const sampleItems = items.slice(0, Math.min(3, items.length));
+          // Sample more items for better schema inference
+          const sampleSize = Math.min(5, items.length);
+          const sampleItems = items.slice(0, sampleSize);
+          
+          // Generate schemas for sample items
           const itemSchemas = sampleItems.map(generateSchema);
           
-          // If all items have the same type, use that schema
+          // Check if all items have the same structure
           const firstType = itemSchemas[0]?.type;
-          if (itemSchemas.every(schema => schema.type === firstType)) {
+          
+          if (firstType === 'object') {
+            // For objects, merge all properties and required fields
+            const mergedSchema: any = {
+              type: 'object',
+              properties: {},
+              required: []
+            };
+            
+            // Collect all properties from sample objects
+            const allProperties = new Set<string>();
+            itemSchemas.forEach(schema => {
+              if (schema.properties) {
+                Object.keys(schema.properties).forEach(prop => allProperties.add(prop));
+              }
+            });
+            
+            // Generate property schemas and determine which are consistently required
+            allProperties.forEach(prop => {
+              const propSchemas = itemSchemas
+                .filter(schema => schema.properties && schema.properties[prop])
+                .map(schema => schema.properties[prop]);
+              
+              if (propSchemas.length > 0) {
+                // Use the first occurrence as the property schema
+                mergedSchema.properties[prop] = propSchemas[0];
+                
+                // Mark as required if present in all sampled items
+                const requiredInAll = itemSchemas.every(schema => 
+                  schema.required && schema.required.includes(prop)
+                );
+                
+                if (requiredInAll) {
+                  mergedSchema.required.push(prop);
+                }
+              }
+            });
+            
+            // Remove empty required array
+            if (mergedSchema.required.length === 0) {
+              delete mergedSchema.required;
+            }
+            
+            schema_arr.items = mergedSchema;
+          } else if (itemSchemas.every(schema => schema.type === firstType)) {
+            // All items have the same primitive type
             schema_arr.items = itemSchemas[0];
           } else {
             // Mixed types, use oneOf
@@ -67,11 +115,16 @@ export function generateJSONSchema(data: any): any {
         
         Object.entries(obj).forEach(([key, val]) => {
           schema_obj.properties[key] = generateSchema(val);
-          // Mark non-null values as required
+          // Mark non-null and non-undefined values as required
           if (val !== null && val !== undefined) {
             schema_obj.required.push(key);
           }
         });
+        
+        // Remove empty required array to clean up the schema
+        if (schema_obj.required.length === 0) {
+          delete schema_obj.required;
+        }
         
         return schema_obj;
       

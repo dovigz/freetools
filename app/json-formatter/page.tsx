@@ -88,7 +88,7 @@ export default function JSONFormatter() {
                   className="w-64 px-4 py-2 bg-slate-700 text-white text-sm rounded-md border border-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-600 transition-colors font-mono"
                   title={`Click to edit current JSON data${parsedData ? ": " + JSON.stringify(parsedData).substring(0, 100) + "..." : ""}`}
                   onClick={(e) => {
-                    e.target.click();
+                    (e.target as HTMLInputElement).click();
                   }}
                   readOnly
                 />

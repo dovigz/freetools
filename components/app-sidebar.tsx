@@ -1,8 +1,5 @@
 "use client";
 
-import type * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -11,9 +8,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { tools } from "@/lib/categories";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function AppSidebar({ ...props }) {
   const pathname = usePathname();
@@ -27,9 +27,9 @@ export function AppSidebar({ ...props }) {
   };
 
   return (
-    <Sidebar {...props} className="border-r border-gray-200">
+    <Sidebar {...props} className="border-r border-gray-200" collapsible="icon">
       <SidebarContent className="bg-white">
-        {/* Logo at the top */}
+        {/* Logo */}
         <div className="flex items-center justify-start h-16 border-b px-4">
           <Link
             href="/"
@@ -45,6 +45,12 @@ export function AppSidebar({ ...props }) {
             </div>
           </Link>
         </div>
+
+        {/* Floating collapse button */}
+        <div className="absolute top-20 -right-3 z-30 hidden md:block">
+          <SidebarTrigger className="rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow h-6 w-6 p-0" />
+        </div>
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -53,6 +59,7 @@ export function AppSidebar({ ...props }) {
                   <SidebarMenuButton
                     asChild
                     isActive={pathname === tool.path}
+                    tooltip={tool.id !== "home" ? tool.name : undefined}
                     className="justify-start text-gray-700 hover:bg-gray-50 data-[active=true]:bg-gray-100 data-[active=true]:text-gray-900"
                   >
                     <Link

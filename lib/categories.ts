@@ -9,6 +9,14 @@ export interface Tool {
 
 export const tools: Tool[] = [
   {
+    id: "home",
+    name: "Home",
+    path: "/",
+    emoji: "🏠",
+    description: "Return to the homepage",
+    gradient: "linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)",
+  },
+  {
     id: "qr-generator",
     name: "QR Generator",
     path: "/qr-generator",

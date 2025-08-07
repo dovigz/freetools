@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { 
-  ChevronRight, 
-  Copy,
-} from 'lucide-react';
-import { JSONNode, createJSONTree, getNodeDisplayValue, searchJSON, SearchResult, getSearchHighlight } from '@/lib/json-formatter';
-import { generateJSONSchema, formatSchemaForDisplay } from '@/lib/json-schema';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import {
+  JSONNode,
+  SearchResult,
+  createJSONTree,
+  getNodeDisplayValue,
+  getSearchHighlight,
+  searchJSON,
+} from "@/lib/json-formatter";
+import { formatSchemaForDisplay, generateJSONSchema } from "@/lib/json-schema";
+import { cn } from "@/lib/utils";
+import { ChevronRight, Copy } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface JSONHeroViewProps {
   data: any;
@@ -20,7 +24,7 @@ interface JSONHeroViewProps {
 
 interface JSONColumnProps {
   title: string;
-  type: 'object' | 'array' | 'root';
+  type: "object" | "array" | "root";
   nodes: JSONNode[];
   selectedPath: string[];
   columnIndex: number;
@@ -30,25 +34,27 @@ interface JSONColumnProps {
 }
 
 function getFieldCount(node: JSONNode): string {
-  if (node.type === 'array') {
+  if (node.type === "array") {
     return `${node.value.length} items`;
-  } else if (node.type === 'object') {
+  } else if (node.type === "object") {
     return `${Object.keys(node.value).length} fields`;
   }
-  return '';
+  return "";
 }
 
 function HighlightedText({ text, query }: { text: string; query?: string }) {
   if (!query) return <span>{text}</span>;
-  
+
   const parts = getSearchHighlight(text, query);
-  
+
   return (
     <span>
       {parts.map((part, index) => (
         <span
           key={index}
-          className={part.isHighlighted ? 'bg-yellow-300 text-black px-0.5 rounded' : ''}
+          className={
+            part.isHighlighted ? "bg-yellow-300 text-black px-0.5 rounded" : ""
+          }
         >
           {part.text}
         </span>
@@ -57,24 +63,40 @@ function HighlightedText({ text, query }: { text: string; query?: string }) {
   );
 }
 
-function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, searchQuery, searchResults }: JSONColumnProps) {
+function JSONColumn({
+  title,
+  type,
+  nodes,
+  selectedPath,
+  columnIndex,
+  onSelect,
+  searchQuery,
+  searchResults,
+}: JSONColumnProps) {
   const copyPath = async (path: string[]) => {
     try {
-      await navigator.clipboard.writeText(path.join('.'));
+      await navigator.clipboard.writeText(path.join("."));
     } catch (e) {
-      // Handle error  
+      // Handle error
     }
   };
 
-  const getItemIcon = (nodeType: JSONNode['type']) => {
+  const getItemIcon = (nodeType: JSONNode["type"]) => {
     switch (nodeType) {
-      case 'string': return '📝';
-      case 'number': return '🔢';
-      case 'boolean': return '✅';
-      case 'null': return '⚪';
-      case 'array': return '📊';
-      case 'object': return '📄';
-      default: return '❓';
+      case "string":
+        return "📝";
+      case "number":
+        return "🔢";
+      case "boolean":
+        return "✅";
+      case "null":
+        return "⚪";
+      case "array":
+        return "📊";
+      case "object":
+        return "📄";
+      default:
+        return "❓";
     }
   };
 
@@ -83,10 +105,12 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
       {/* Column Header */}
       <div className="p-3 border-b border-slate-600 bg-slate-800">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{type === 'array' ? '📊' : type === 'object' ? '📄' : '🏠'}</span>
+          <span className="text-lg">
+            {type === "array" ? "📊" : type === "object" ? "📄" : "🏠"}
+          </span>
           <h3 className="font-semibold text-white text-sm">{title}</h3>
           <span className="text-slate-400 text-xs">
-            {type === 'object' ? 'object' : type === 'array' ? 'array' : 'root'}
+            {type === "object" ? "object" : type === "array" ? "array" : "root"}
           </span>
         </div>
       </div>
@@ -98,9 +122,11 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
             const isSelected = selectedPath[columnIndex] === node.key;
             const hasChildren = node.children && node.children.length > 0;
             const fieldCount = getFieldCount(node);
-            
+
             // Find search result for this node
-            const searchResult = searchResults?.find(result => result.node.id === node.id);
+            const searchResult = searchResults?.find(
+              (result) => result.node.id === node.id
+            );
             const matchType = searchResult?.matchType;
 
             return (
@@ -109,15 +135,24 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
                 className={cn(
                   "flex items-center p-3 cursor-pointer hover:bg-slate-700/50 group transition-colors border-b border-slate-700/30 last:border-b-0",
                   isSelected && "bg-slate-600/70 hover:bg-slate-600/70",
-                  matchType === 'exact' && !isSelected && "bg-yellow-900/30 ring-1 ring-yellow-500/50",
-                  matchType === 'nested' && !isSelected && "bg-yellow-900/10 ring-1 ring-yellow-500/20",
+                  matchType === "exact" &&
+                    !isSelected &&
+                    "bg-yellow-900/30 ring-1 ring-yellow-500/50",
+                  matchType === "nested" &&
+                    !isSelected &&
+                    "bg-yellow-900/10 ring-1 ring-yellow-500/20",
                   !hasChildren && "cursor-default hover:bg-transparent"
                 )}
-                onClick={() => hasChildren && onSelect([...selectedPath.slice(0, columnIndex), node.key])}
+                onClick={() =>
+                  hasChildren &&
+                  onSelect([...selectedPath.slice(0, columnIndex), node.key])
+                }
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-lg flex-shrink-0">{getItemIcon(node.type)}</span>
-                  
+                  <span className="text-lg flex-shrink-0">
+                    {getItemIcon(node.type)}
+                  </span>
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-white text-sm truncate">
@@ -133,7 +168,10 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
                       )}
                     </div>
                     <p className="text-xs text-slate-400 truncate mt-1">
-                      <HighlightedText text={getNodeDisplayValue(node)} query={searchQuery} />
+                      <HighlightedText
+                        text={getNodeDisplayValue(node)}
+                        query={searchQuery}
+                      />
                     </p>
                   </div>
 
@@ -143,7 +181,10 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
                     className="opacity-0 group-hover:opacity-100 w-6 h-6 p-0 transition-opacity hover:bg-slate-600"
                     onClick={(e) => {
                       e.stopPropagation();
-                      copyPath([...selectedPath.slice(0, columnIndex), node.key]);
+                      copyPath([
+                        ...selectedPath.slice(0, columnIndex),
+                        node.key,
+                      ]);
                     }}
                     title="Copy path"
                   >
@@ -159,10 +200,16 @@ function JSONColumn({ title, type, nodes, selectedPath, columnIndex, onSelect, s
   );
 }
 
-export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, className }: JSONHeroViewProps) {
-  const [activeTab, setActiveTab] = useState<'json' | 'schema'>('json');
+export function JSONTreeView({
+  data,
+  selectedPath,
+  onPathChange,
+  searchQuery,
+  className,
+}: JSONHeroViewProps) {
+  const [activeTab, setActiveTab] = useState<"json" | "schema">("json");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   const rootNodes = useMemo(() => {
     if (!data) return [];
     return createJSONTree(data);
@@ -177,51 +224,52 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
   const columns = useMemo(() => {
     const cols: Array<{
       title: string;
-      type: 'object' | 'array' | 'root';
+      type: "object" | "array" | "root";
       nodes: JSONNode[];
     }> = [];
-    
+
     // Root column
     cols.push({
-      title: 'root',
-      type: 'root',
-      nodes: rootNodes
+      title: "root",
+      type: "root",
+      nodes: rootNodes,
     });
-    
+
     // Build subsequent columns based on selected path
     let currentNodes = rootNodes;
     let currentPath: string[] = [];
-    
+
     for (let i = 0; i < selectedPath.length; i++) {
       const pathSegment = selectedPath[i];
-      const selectedNode = currentNodes.find(node => 
-        node.path.length === currentPath.length + 1 && 
-        node.path[currentPath.length] === pathSegment
+      const selectedNode = currentNodes.find(
+        (node) =>
+          node.path.length === currentPath.length + 1 &&
+          node.path[currentPath.length] === pathSegment
       );
-      
+
       if (selectedNode && selectedNode.children) {
         currentPath = [...currentPath, pathSegment];
         cols.push({
           title: pathSegment,
-          type: selectedNode.type as 'object' | 'array',
-          nodes: selectedNode.children
+          type: selectedNode.type as "object" | "array",
+          nodes: selectedNode.children,
         });
         currentNodes = selectedNode.children;
       } else {
         break;
       }
     }
-    
+
     return cols;
   }, [rootNodes, selectedPath]);
 
   // Get the current selected value for the JSON display
   const getCurrentValue = () => {
     if (selectedPath.length === 0) return data;
-    
+
     let current = data;
     for (const segment of selectedPath) {
-      if (current && typeof current === 'object' && segment in current) {
+      if (current && typeof current === "object" && segment in current) {
         current = current[segment];
       } else {
         return null;
@@ -231,7 +279,7 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
   };
 
   const currentValue = getCurrentValue();
-  
+
   // Generate schema for the current value
   const currentSchema = useMemo(() => {
     if (currentValue === null) return null;
@@ -247,40 +295,83 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
     if (!scrollContainerRef.current || columns.length === 0) return;
 
     const container = scrollContainerRef.current;
-    const selectedColumnIndex = Math.min(selectedPath.length, columns.length - 1);
-    
+
+    // The column to center is the rightmost visible column
+    // If we have a selection (selectedPath.length > 0), center the column that shows the children
+    // If no selection, center the root column
+    const targetColumnIndex = selectedPath.length > 0 ? selectedPath.length : 0;
+
+    // Make sure we don't try to scroll to a column that doesn't exist
+    const maxColumnIndex = columns.length - 1;
+    const selectedColumnIndex = Math.min(targetColumnIndex, maxColumnIndex);
+
     // Calculate scroll position to center the selected column
     const COLUMN_WIDTH = 320; // w-80 = 320px
     const containerWidth = container.clientWidth;
-    
+
+    // Debug logging
+    console.log("Auto-scroll debug:", {
+      selectedPath,
+      columnsLength: columns.length,
+      targetColumnIndex,
+      selectedColumnIndex,
+      containerWidth,
+      scrollWidth: container.scrollWidth,
+    });
+
     // Don't auto-scroll if container is too narrow (mobile)
-    if (containerWidth < COLUMN_WIDTH * 1.5) return;
-    
+    if (containerWidth < COLUMN_WIDTH * 1.5) {
+      console.log("Skipping auto-scroll: container too narrow");
+      return;
+    }
+
     // Target position: center the selected column in the viewport
-    const targetScrollLeft = (selectedColumnIndex * COLUMN_WIDTH) - (containerWidth / 2) + (COLUMN_WIDTH / 2);
-    
+    const targetScrollLeft =
+      selectedColumnIndex * COLUMN_WIDTH -
+      containerWidth / 2 +
+      COLUMN_WIDTH / 2;
+
     // Clamp to valid scroll range
     const maxScrollLeft = Math.max(0, container.scrollWidth - containerWidth);
-    const clampedScrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft));
-    
+    const clampedScrollLeft = Math.max(
+      0,
+      Math.min(targetScrollLeft, maxScrollLeft)
+    );
+
     // Only scroll if we're not already close to the target position
     const currentScrollLeft = container.scrollLeft;
     const threshold = containerWidth < 800 ? 30 : 50; // Smaller threshold on smaller screens
-    
+
+    console.log("Scroll calculation:", {
+      currentScrollLeft,
+      targetScrollLeft,
+      clampedScrollLeft,
+      threshold,
+      shouldScroll: Math.abs(currentScrollLeft - clampedScrollLeft) > threshold,
+    });
+
     if (Math.abs(currentScrollLeft - clampedScrollLeft) > threshold) {
-      // Use a small delay to ensure DOM updates are complete
-      requestAnimationFrame(() => {
-        container.scrollTo({
-          left: clampedScrollLeft,
-          behavior: 'smooth'
-        });
-      });
+      // Add a small delay to ensure the columns have been rendered
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          console.log("Executing scroll to:", clampedScrollLeft);
+          scrollContainerRef.current.scrollTo({
+            left: clampedScrollLeft,
+            behavior: "smooth",
+          });
+        }
+      }, 50);
     }
   }, [selectedPath, columns.length]);
 
   if (!data) {
     return (
-      <div className={cn("h-full flex items-center justify-center bg-slate-800", className)}>
+      <div
+        className={cn(
+          "h-full flex items-center justify-center bg-slate-800",
+          className
+        )}
+      >
         <p className="text-slate-400">No JSON data to display</p>
       </div>
     );
@@ -288,7 +379,10 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
 
   return (
     <div className={cn("h-full flex bg-slate-800 overflow-hidden", className)}>
-      <div ref={scrollContainerRef} className="flex h-full overflow-x-auto scroll-smooth json-scroll">
+      <div
+        ref={scrollContainerRef}
+        className="flex h-full overflow-x-auto scroll-smooth json-scroll"
+      >
         {/* Navigation columns */}
         {columns.map((column, index) => (
           <JSONColumn
@@ -303,7 +397,7 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
             searchResults={searchResults}
           />
         ))}
-        
+
         {/* JSON Display Column */}
         {currentValue !== null && (
           <div className="w-96 bg-slate-900 border-r border-slate-600 flex flex-col">
@@ -311,48 +405,52 @@ export function JSONTreeView({ data, selectedPath, onPathChange, searchQuery, cl
               <div className="flex items-center gap-2">
                 <span className="text-lg">📄</span>
                 <h3 className="font-semibold text-white text-sm">
-                  {selectedPath.length > 0 ? selectedPath[selectedPath.length - 1] : 'root'}
+                  {selectedPath.length > 0
+                    ? selectedPath[selectedPath.length - 1]
+                    : "root"}
                 </h3>
                 <span className="text-slate-400 text-xs">
-                  {Array.isArray(currentValue) ? 'array' : typeof currentValue}
+                  {Array.isArray(currentValue) ? "array" : typeof currentValue}
                 </span>
               </div>
               <div className="flex gap-2 mt-2">
-                <button 
+                <button
                   className={cn(
                     "px-3 py-1 text-xs rounded transition-colors",
-                    activeTab === 'json' 
-                      ? "bg-slate-700 text-white border-b-2 border-blue-400" 
+                    activeTab === "json"
+                      ? "bg-slate-700 text-white border-b-2 border-blue-400"
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
                   )}
-                  onClick={() => setActiveTab('json')}
+                  onClick={() => setActiveTab("json")}
                 >
                   JSON
                 </button>
-                <button 
+                <button
                   className={cn(
                     "px-3 py-1 text-xs rounded transition-colors",
-                    activeTab === 'schema' 
-                      ? "bg-slate-700 text-white border-b-2 border-blue-400" 
+                    activeTab === "schema"
+                      ? "bg-slate-700 text-white border-b-2 border-blue-400"
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
                   )}
-                  onClick={() => setActiveTab('schema')}
+                  onClick={() => setActiveTab("schema")}
                   disabled={!currentSchema}
                 >
                   Schema
                 </button>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto">
               <div className="p-3">
-                {activeTab === 'json' ? (
+                {activeTab === "json" ? (
                   <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
                     {JSON.stringify(currentValue, null, 2)}
                   </pre>
                 ) : (
                   <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
-                    {currentSchema ? formatSchemaForDisplay(currentSchema) : 'No schema available'}
+                    {currentSchema
+                      ? formatSchemaForDisplay(currentSchema)
+                      : "No schema available"}
                   </pre>
                 )}
               </div>

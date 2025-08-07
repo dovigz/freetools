@@ -12,6 +12,7 @@ import {
 import { formatSchemaForDisplay, generateJSONSchema } from "@/lib/json-schema";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Copy } from "lucide-react";
+import { FieldDetailsView } from "./field-details-view";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface JSONHeroViewProps {
@@ -141,10 +142,9 @@ function JSONColumn({
                   matchType === "nested" &&
                     !isSelected &&
                     "bg-yellow-900/10 ring-1 ring-yellow-500/20",
-                  !hasChildren && "cursor-default hover:bg-transparent"
+                  !hasChildren && "cursor-pointer hover:bg-slate-700/50"
                 )}
                 onClick={() =>
-                  hasChildren &&
                   onSelect([...selectedPath.slice(0, columnIndex), node.key])
                 }
               >
@@ -398,65 +398,89 @@ export function JSONTreeView({
           />
         ))}
 
-        {/* JSON Display Column */}
-        {currentValue !== null && (
-          <div className="w-96 bg-slate-900 border-r border-slate-600 flex flex-col">
-            <div className="p-3 border-b border-slate-600">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">📄</span>
-                <h3 className="font-semibold text-white text-sm">
-                  {selectedPath.length > 0
-                    ? selectedPath[selectedPath.length - 1]
-                    : "root"}
-                </h3>
-                <span className="text-slate-400 text-xs">
-                  {Array.isArray(currentValue) ? "array" : typeof currentValue}
-                </span>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  className={cn(
-                    "px-3 py-1 text-xs rounded transition-colors",
-                    activeTab === "json"
-                      ? "bg-slate-700 text-white border-b-2 border-blue-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-700"
-                  )}
-                  onClick={() => setActiveTab("json")}
-                >
-                  JSON
-                </button>
-                <button
-                  className={cn(
-                    "px-3 py-1 text-xs rounded transition-colors",
-                    activeTab === "schema"
-                      ? "bg-slate-700 text-white border-b-2 border-blue-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-700"
-                  )}
-                  onClick={() => setActiveTab("schema")}
-                  disabled={!currentSchema}
-                >
-                  Schema
-                </button>
-              </div>
-            </div>
+        {/* Right Panel - Field Details or JSON Display */}
+        {(currentValue !== null || selectedPath.length > 0) && (() => {
+          // Check if current value is a primitive (not object or array, including null)
+          const isPrimitive = (currentValue === null) || 
+            (currentValue !== null && typeof currentValue !== 'object' && !Array.isArray(currentValue));
+          
+          const fieldName = selectedPath.length > 0 
+            ? selectedPath[selectedPath.length - 1] 
+            : "root";
 
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-3">
-                {activeTab === "json" ? (
-                  <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
-                    {JSON.stringify(currentValue, null, 2)}
-                  </pre>
-                ) : (
-                  <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
-                    {currentSchema
-                      ? formatSchemaForDisplay(currentSchema)
-                      : "No schema available"}
-                  </pre>
-                )}
+          const fullPath = selectedPath.length > 0 
+            ? selectedPath.join('.')
+            : "root";
+
+          if (isPrimitive) {
+            // Show field details for primitive values
+            return (
+              <FieldDetailsView
+                fieldName={fullPath}
+                value={currentValue}
+                className="w-96 bg-slate-900 border-r border-slate-600"
+              />
+            );
+          } else {
+            // Show JSON/Schema tabs for objects and arrays
+            return (
+              <div className="w-96 bg-slate-900 border-r border-slate-600 flex flex-col">
+                <div className="p-3 border-b border-slate-600">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📄</span>
+                    <h3 className="font-semibold text-white text-sm">
+                      {fieldName}
+                    </h3>
+                    <span className="text-slate-400 text-xs">
+                      {Array.isArray(currentValue) ? "array" : typeof currentValue}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      className={cn(
+                        "px-3 py-1 text-xs rounded transition-colors",
+                        activeTab === "json"
+                          ? "bg-slate-700 text-white border-b-2 border-blue-400"
+                          : "text-slate-400 hover:text-white hover:bg-slate-700"
+                      )}
+                      onClick={() => setActiveTab("json")}
+                    >
+                      JSON
+                    </button>
+                    <button
+                      className={cn(
+                        "px-3 py-1 text-xs rounded transition-colors",
+                        activeTab === "schema"
+                          ? "bg-slate-700 text-white border-b-2 border-blue-400"
+                          : "text-slate-400 hover:text-white hover:bg-slate-700"
+                      )}
+                      onClick={() => setActiveTab("schema")}
+                      disabled={!currentSchema}
+                    >
+                      Schema
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-3">
+                    {activeTab === "json" ? (
+                      <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
+                        {JSON.stringify(currentValue, null, 2)}
+                      </pre>
+                    ) : (
+                      <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
+                        {currentSchema
+                          ? formatSchemaForDisplay(currentSchema)
+                          : "No schema available"}
+                      </pre>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
+        })()}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,11 +13,31 @@ import { validateJSON, parseJSON } from '@/lib/json-formatter';
 interface JSONImportDialogProps {
   onImport: (data: any) => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  currentData?: any;
 }
 
-export function JSONImportDialog({ onImport, trigger }: JSONImportDialogProps) {
-  const [open, setOpen] = useState(false);
+export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpenChange, currentData }: JSONImportDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
+  
+  // Use external open state if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
+  
+  // Pre-populate with current data when dialog opens
+  useEffect(() => {
+    if (open && currentData) {
+      const formatted = JSON.stringify(currentData, null, 2);
+      setJsonInput(formatted);
+      setValidationResult({ isValid: true });
+    } else if (!open) {
+      // Reset when dialog closes
+      setJsonInput('');
+      setValidationResult({ isValid: true });
+    }
+  }, [open, currentData]);
   const [urlInput, setUrlInput] = useState('');
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; error?: string }>({ isValid: true });
   const [loading, setLoading] = useState(false);
@@ -118,14 +138,19 @@ export function JSONImportDialog({ onImport, trigger }: JSONImportDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
+      {!trigger && externalOpen === undefined && (
+        <DialogTrigger asChild>
           <Button size="sm" variant="outline" className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
             <Upload className="w-4 h-4 mr-2" />
             Import JSON
           </Button>
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
       
       <DialogContent className="max-w-2xl max-h-[80vh] bg-slate-800 border-slate-600">
         <DialogHeader>

@@ -201,3 +201,58 @@ export const generateRandomShapes = () => {
     cornersDotType: cornerDotTypes[Math.floor(Math.random() * cornerDotTypes.length)]
   }
 }
+
+// Frame presets
+export interface FramePreset {
+  id: string
+  name: string
+  backgroundColor: string
+  textColor: string
+  borderColor: string
+  borderWidth: string
+  borderRadius: string
+  padding: string
+}
+
+export const framePresets: FramePreset[] = [
+  {
+    id: 'dark-frame',
+    name: 'Dark Frame',
+    backgroundColor: '#000000',
+    textColor: '#ffffff',
+    borderColor: '#000000',
+    borderWidth: '8px',
+    borderRadius: '12px',
+    padding: '20px'
+  },
+  {
+    id: 'light-frame',
+    name: 'Light Frame',
+    backgroundColor: '#ffffff',
+    textColor: '#000000',
+    borderColor: '#e2e8f0',
+    borderWidth: '4px',
+    borderRadius: '8px',
+    padding: '16px'
+  },
+  {
+    id: 'gradient-frame',
+    name: 'Gradient Frame',
+    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    textColor: '#ffffff',
+    borderColor: '#667eea',
+    borderWidth: '6px',
+    borderRadius: '16px',
+    padding: '24px'
+  },
+  {
+    id: 'minimal-frame',
+    name: 'Minimal Frame',
+    backgroundColor: '#f8fafc',
+    textColor: '#64748b',
+    borderColor: '#cbd5e1',
+    borderWidth: '2px',
+    borderRadius: '4px',
+    padding: '12px'
+  }
+]

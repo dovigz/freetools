@@ -19,6 +19,12 @@ export interface QRCodeState {
   logo?: string
   logoSize: number
   logoMargin: number
+  // Frame settings
+  hasFrame: boolean
+  frameColor: string
+  textColor: string
+  frameText: string
+  textPosition: 'top' | 'bottom'
 }
 
 const initialState: QRCodeState = {
@@ -36,7 +42,13 @@ const initialState: QRCodeState = {
   cornersDotType: 'dot',
   backgroundColor: 'transparent',
   logoSize: 0.4,
-  logoMargin: 0
+  logoMargin: 0,
+  // Frame settings
+  hasFrame: true,
+  frameColor: '#000000',
+  textColor: '#ffffff',
+  frameText: 'Scan for more info',
+  textPosition: 'bottom'
 }
 
 export const useQRGenerator = () => {
@@ -115,6 +127,10 @@ export const useQRGenerator = () => {
     const backgroundColor = Math.random() > 0.5 ? generateRandomColor() : 'transparent'
     const shapes = generateRandomShapes()
     
+    // Frame randomization
+    const textPositions = ['top', 'bottom']
+    const frameTexts = ['Scan for more info', 'Scan me!', 'Get more details', 'Visit our site', 'Learn more']
+    
     updateQRState({
       dotsColor,
       cornersSquareColor, 
@@ -125,7 +141,13 @@ export const useQRGenerator = () => {
       cornersDotType: shapes.cornersDotType as CornerDotType,
       // Also randomize some other properties for fun
       borderRadius: Math.floor(Math.random() * 25),
-      margin: Math.floor(Math.random() * 30) + 5
+      margin: Math.floor(Math.random() * 30) + 5,
+      // Frame randomization (30% chance to have frame)
+      hasFrame: Math.random() > 0.7,
+      frameColor: generateRandomColor(),
+      textColor: generateRandomColor(),
+      frameText: frameTexts[Math.floor(Math.random() * frameTexts.length)],
+      textPosition: textPositions[Math.floor(Math.random() * textPositions.length)] as any
     })
   }, [updateQRState])
 

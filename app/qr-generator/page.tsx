@@ -25,8 +25,11 @@ import {
   Copy,
   DollarSign,
   Download,
+  Facebook,
   Image as ImageIcon,
+  Instagram,
   Link,
+  Linkedin,
   Mail,
   MessageCircle,
   Palette,
@@ -35,10 +38,12 @@ import {
   Scan,
   Settings,
   Sparkles,
+  Twitter,
   Upload,
   User,
   Video,
   Wifi,
+  Youtube,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -168,6 +173,12 @@ export default function QRGenerator() {
     | "skype"
     | "zoom"
     | "paypal"
+    | "facebook"
+    | "twitter"
+    | "instagram"
+    | "linkedin"
+    | "tiktok"
+    | "youtube"
   >("url");
   const [wifiData, setWifiData] = useState({
     ssid: "",
@@ -220,6 +231,30 @@ export default function QRGenerator() {
     currency: "USD",
     shipping: "",
     taxRate: "",
+  });
+  const [facebookData, setFacebookData] = useState({
+    url: "",
+    username: "",
+  });
+  const [twitterData, setTwitterData] = useState({
+    url: "",
+    username: "",
+  });
+  const [instagramData, setInstagramData] = useState({
+    url: "",
+    username: "",
+  });
+  const [linkedinData, setLinkedinData] = useState({
+    url: "",
+    username: "",
+  });
+  const [tiktokData, setTiktokData] = useState({
+    url: "",
+    username: "",
+  });
+  const [youtubeData, setYoutubeData] = useState({
+    url: "",
+    channel: "",
   });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -322,6 +357,38 @@ export default function QRGenerator() {
         });
         updateQRState({ data: paypalQRData });
         break;
+      case "facebook":
+        const fbUrl =
+          facebookData.url || `https://facebook.com/${facebookData.username}`;
+        updateQRState({ data: fbUrl });
+        break;
+      case "twitter":
+        const twitterUrl =
+          twitterData.url || `https://twitter.com/${twitterData.username}`;
+        updateQRState({ data: twitterUrl });
+        break;
+      case "instagram":
+        const instaUrl =
+          instagramData.url ||
+          `https://instagram.com/${instagramData.username}`;
+        updateQRState({ data: instaUrl });
+        break;
+      case "linkedin":
+        const linkedinUrl =
+          linkedinData.url ||
+          `https://linkedin.com/in/${linkedinData.username}`;
+        updateQRState({ data: linkedinUrl });
+        break;
+      case "tiktok":
+        const tiktokUrl =
+          tiktokData.url || `https://tiktok.com/@${tiktokData.username}`;
+        updateQRState({ data: tiktokUrl });
+        break;
+      case "youtube":
+        const youtubeUrl =
+          youtubeData.url || `https://youtube.com/c/${youtubeData.channel}`;
+        updateQRState({ data: youtubeUrl });
+        break;
       default:
         updateQRState({ data: "Hello, World!" });
     }
@@ -388,6 +455,48 @@ export default function QRGenerator() {
     const newPayPalData = { ...paypalData, [field]: value };
     setPaypalData(newPayPalData);
     updateQRState({ data: generatePayPalQR(newPayPalData) });
+  };
+
+  const updateFacebook = (updates: Partial<typeof facebookData>) => {
+    const newData = { ...facebookData, ...updates };
+    setFacebookData(newData);
+    const url = newData.url || `https://facebook.com/${newData.username}`;
+    updateQRState({ data: url });
+  };
+
+  const updateTwitter = (updates: Partial<typeof twitterData>) => {
+    const newData = { ...twitterData, ...updates };
+    setTwitterData(newData);
+    const url = newData.url || `https://twitter.com/${newData.username}`;
+    updateQRState({ data: url });
+  };
+
+  const updateInstagram = (updates: Partial<typeof instagramData>) => {
+    const newData = { ...instagramData, ...updates };
+    setInstagramData(newData);
+    const url = newData.url || `https://instagram.com/${newData.username}`;
+    updateQRState({ data: url });
+  };
+
+  const updateLinkedIn = (updates: Partial<typeof linkedinData>) => {
+    const newData = { ...linkedinData, ...updates };
+    setLinkedinData(newData);
+    const url = newData.url || `https://linkedin.com/in/${newData.username}`;
+    updateQRState({ data: url });
+  };
+
+  const updateTikTok = (updates: Partial<typeof tiktokData>) => {
+    const newData = { ...tiktokData, ...updates };
+    setTiktokData(newData);
+    const url = newData.url || `https://tiktok.com/@${newData.username}`;
+    updateQRState({ data: url });
+  };
+
+  const updateYouTube = (updates: Partial<typeof youtubeData>) => {
+    const newData = { ...youtubeData, ...updates };
+    setYoutubeData(newData);
+    const url = newData.url || `https://youtube.com/c/${newData.channel}`;
+    updateQRState({ data: url });
   };
 
   const handleDownload = async (format: "png" | "jpg" | "svg") => {
@@ -694,6 +803,12 @@ export default function QRGenerator() {
                   { value: "skype", label: "Skype", icon: Video },
                   { value: "zoom", label: "Zoom", icon: Video },
                   { value: "paypal", label: "PayPal", icon: DollarSign },
+                  { value: "facebook", label: "Facebook", icon: Facebook },
+                  { value: "twitter", label: "Twitter", icon: Twitter },
+                  { value: "instagram", label: "Instagram", icon: Instagram },
+                  { value: "linkedin", label: "LinkedIn", icon: Linkedin },
+                  { value: "tiktok", label: "TikTok", icon: Video },
+                  { value: "youtube", label: "YouTube", icon: Youtube },
                 ].map(({ value, label, icon: Icon }) => (
                   <Button
                     key={value}
@@ -1270,6 +1385,164 @@ export default function QRGenerator() {
                 </div>
               )}
 
+              {/* Facebook Form */}
+              {dataType === "facebook" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="facebookUrl">Facebook URL (Optional)</Label>
+                    <Input
+                      id="facebookUrl"
+                      value={facebookData.url}
+                      onChange={(e) => updateFacebook({ url: e.target.value })}
+                      placeholder="https://facebook.com/yourpage"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="facebookUsername">Username/Page Name</Label>
+                    <Input
+                      id="facebookUsername"
+                      value={facebookData.username}
+                      onChange={(e) =>
+                        updateFacebook({ username: e.target.value })
+                      }
+                      placeholder="yourpage"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Twitter Form */}
+              {dataType === "twitter" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="twitterUrl">Twitter URL (Optional)</Label>
+                    <Input
+                      id="twitterUrl"
+                      value={twitterData.url}
+                      onChange={(e) => updateTwitter({ url: e.target.value })}
+                      placeholder="https://twitter.com/yourusername"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twitterUsername">Username</Label>
+                    <Input
+                      id="twitterUsername"
+                      value={twitterData.username}
+                      onChange={(e) =>
+                        updateTwitter({ username: e.target.value })
+                      }
+                      placeholder="yourusername"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Instagram Form */}
+              {dataType === "instagram" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="instagramUrl">
+                      Instagram URL (Optional)
+                    </Label>
+                    <Input
+                      id="instagramUrl"
+                      value={instagramData.url}
+                      onChange={(e) => updateInstagram({ url: e.target.value })}
+                      placeholder="https://instagram.com/yourusername"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="instagramUsername">Username</Label>
+                    <Input
+                      id="instagramUsername"
+                      value={instagramData.username}
+                      onChange={(e) =>
+                        updateInstagram({ username: e.target.value })
+                      }
+                      placeholder="yourusername"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* LinkedIn Form */}
+              {dataType === "linkedin" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="linkedinUrl">LinkedIn URL (Optional)</Label>
+                    <Input
+                      id="linkedinUrl"
+                      value={linkedinData.url}
+                      onChange={(e) => updateLinkedIn({ url: e.target.value })}
+                      placeholder="https://linkedin.com/in/yourprofile"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="linkedinUsername">Profile Name</Label>
+                    <Input
+                      id="linkedinUsername"
+                      value={linkedinData.username}
+                      onChange={(e) =>
+                        updateLinkedIn({ username: e.target.value })
+                      }
+                      placeholder="yourprofile"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TikTok Form */}
+              {dataType === "tiktok" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="tiktokUrl">TikTok URL (Optional)</Label>
+                    <Input
+                      id="tiktokUrl"
+                      value={tiktokData.url}
+                      onChange={(e) => updateTikTok({ url: e.target.value })}
+                      placeholder="https://tiktok.com/@yourusername"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="tiktokUsername">Username</Label>
+                    <Input
+                      id="tiktokUsername"
+                      value={tiktokData.username}
+                      onChange={(e) =>
+                        updateTikTok({ username: e.target.value })
+                      }
+                      placeholder="yourusername"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* YouTube Form */}
+              {dataType === "youtube" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="youtubeUrl">YouTube URL (Optional)</Label>
+                    <Input
+                      id="youtubeUrl"
+                      value={youtubeData.url}
+                      onChange={(e) => updateYouTube({ url: e.target.value })}
+                      placeholder="https://youtube.com/c/yourchannel"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="youtubeChannel">Channel Name</Label>
+                    <Input
+                      id="youtubeChannel"
+                      value={youtubeData.channel}
+                      onChange={(e) =>
+                        updateYouTube({ channel: e.target.value })
+                      }
+                      placeholder="yourchannel"
+                    />
+                  </div>
+                </div>
+              )}
+
               {![
                 "wifi",
                 "vcard",
@@ -1279,6 +1552,12 @@ export default function QRGenerator() {
                 "skype",
                 "zoom",
                 "paypal",
+                "facebook",
+                "twitter",
+                "instagram",
+                "linkedin",
+                "tiktok",
+                "youtube",
               ].includes(dataType) && (
                 <div>
                   <Label htmlFor="qrData">

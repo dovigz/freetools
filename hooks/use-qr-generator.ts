@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import QRCodeStyling, { type Options as QRCodeOptions, type ErrorCorrectionLevel, type DotType, type CornerSquareType, type CornerDotType } from 'qr-code-styling'
-import { type QRPreset, qrPresets, downloadQRCode, copyQRToClipboard, generateRandomColor, generateRandomShapes } from '@/lib/qr-utils'
+import { type QRPreset, qrPresets, type EmojiPreset, emojiPresets, downloadQRCode, copyQRToClipboard, generateRandomColor, generateRandomShapes } from '@/lib/qr-utils'
 
 export interface QRCodeState {
   data: string
@@ -120,6 +120,22 @@ export const useQRGenerator = () => {
     updateQRState(updates)
   }, [updateQRState])
 
+  const applyEmojiPreset = useCallback((preset: EmojiPreset) => {
+    updateQRState({
+      dotsColor: preset.config.dotsColor,
+      cornersSquareColor: preset.config.cornersSquareColor,
+      cornersDotColor: preset.config.cornersDotColor,
+      backgroundColor: preset.config.backgroundColor,
+      frameColor: preset.config.frameColor,
+      textColor: preset.config.textColor,
+      dotsType: preset.config.dotsType as DotType,
+      cornersSquareType: preset.config.cornersSquareType as CornerSquareType,
+      cornersDotType: preset.config.cornersDotType as CornerDotType,
+      logo: preset.config.logo,
+      hasFrame: true
+    })
+  }, [updateQRState])
+
   const randomizeQR = useCallback(() => {
     const dotsColor = generateRandomColor()
     const cornersSquareColor = generateRandomColor()
@@ -186,11 +202,13 @@ export const useQRGenerator = () => {
     updateQRState,
     generateQROptions,
     applyPreset,
+    applyEmojiPreset,
     randomizeQR,
     downloadQR,
     copyToClipboard,
     setQRInstance,
     isGenerating,
-    presets: qrPresets
+    presets: qrPresets,
+    emojiPresets
   }
 }

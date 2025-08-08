@@ -32,6 +32,7 @@ import {
   RefreshCw,
   Settings,
   Sparkles,
+  Upload,
   User,
   Wifi,
 } from "lucide-react";
@@ -41,7 +42,7 @@ import { toast } from "sonner";
 import QRWithFrame from "@/components/qr/QRWithFrame";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
-import { generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
+import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
 
 export default function QRGenerator() {
   const {
@@ -49,6 +50,7 @@ export default function QRGenerator() {
     updateQRState,
     generateQROptions,
     applyPreset,
+    applyEmojiPreset,
     randomizeQR,
     downloadQR,
     copyToClipboard,
@@ -74,9 +76,29 @@ export default function QRGenerator() {
     url: "",
   });
   const qrRef = useRef<StyledQRCodeRef>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleQRReady = (qrInstance: any) => {
     setQRInstance(qrInstance);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        updateQRState({ logo: result });
+        toast.success("Logo uploaded successfully!");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast.error("Please select a valid image file");
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Don't auto-detect data type - let user control it manually
@@ -438,7 +460,7 @@ export default function QRGenerator() {
             </CardContent>
           </Card>
 
-          {/* Style Presets */}
+          {/* Emoji Style Presets */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -446,22 +468,22 @@ export default function QRGenerator() {
                 Style Presets
               </CardTitle>
               <CardDescription>
-                Choose from pre-designed QR code styles
+                Choose from emoji-themed QR code styles
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {presets.map((preset) => (
+              <div className="flex flex-wrap gap-0.5">
+                {emojiPresets.map((preset) => (
                   <Button
                     key={preset.id}
                     variant="outline"
-                    onClick={() => applyPreset(preset)}
-                    className="flex flex-col h-auto p-4 text-left"
+                    onClick={() => applyEmojiPreset(preset)}
+                    className="h-8 w-8 p-0 text-center group hover:scale-110 transition-transform border-0"
+                    title={`${preset.name} - ${preset.description}`}
                   >
-                    <div className="font-medium">{preset.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {preset.description}
-                    </div>
+                    <span className="text-base group-hover:scale-110 transition-transform">
+                      {preset.emoji}
+                    </span>
                   </Button>
                 ))}
               </div>
@@ -847,7 +869,7 @@ export default function QRGenerator() {
                   className="w-4 h-4"
                 />
                 <Label htmlFor="addFrame" className="text-sm font-medium">
-                  Add frame ✓
+                  Add frame
                 </Label>
               </div>
 
@@ -964,22 +986,62 @@ export default function QRGenerator() {
                 Logo Options
               </CardTitle>
               <CardDescription>
-                Add a logo to the center of your QR code
+                Add text, emoji, or image to the center of your QR code
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="logoUrl">Logo URL</Label>
-                <Input
-                  id="logoUrl"
-                  value={qrState.logo || ""}
-                  onChange={(e) =>
-                    updateQRState({ logo: e.target.value || undefined })
-                  }
-                  placeholder="https://example.com/logo.png"
+              <div className="space-y-4">
+                {/* Text/Emoji input with upload button */}
+                <div>
+                  <Label htmlFor="logoText">Logo Text or Emoji</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="logoText"
+                      value={
+                        qrState.logo?.startsWith("data:")
+                          ? ""
+                          : qrState.logo || ""
+                      }
+                      onChange={(e) =>
+                        updateQRState({ logo: e.target.value || undefined })
+                      }
+                      placeholder="🚀 or MyLogo or 🔥"
+                      className="flex-1"
+                      maxLength={10}
+                    />
+                    <Button
+                      onClick={handleUploadClick}
+                      variant="outline"
+                      size="sm"
+                      className="px-3"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Enter text, emoji, or upload an image
+                  </div>
+                </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
                 />
+
+                {/* Upload status indicator */}
+                {qrState.logo?.startsWith("data:") && (
+                  <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
+                    ✓ Image uploaded successfully
+                  </div>
+                )}
               </div>
 
+              {/* Logo size slider */}
               {qrState.logo && (
                 <div>
                   <Label>
@@ -996,6 +1058,18 @@ export default function QRGenerator() {
                     className="mt-2"
                   />
                 </div>
+              )}
+
+              {/* Remove logo button */}
+              {qrState.logo && (
+                <Button
+                  onClick={() => updateQRState({ logo: undefined })}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  Remove Logo
+                </Button>
               )}
             </CardContent>
           </Card>

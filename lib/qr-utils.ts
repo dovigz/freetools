@@ -1451,10 +1451,18 @@ export const generateWiFiQR = (
 export const generateVCardQR = (contact: {
   firstName?: string;
   lastName?: string;
-  email?: string;
-  phone?: string;
+  title?: string;
   organization?: string;
-  url?: string;
+  street?: string;
+  city?: string;
+  zipCode?: string;
+  country?: string;
+  emailPersonal?: string;
+  emailBusiness?: string;
+  phonePersonal?: string;
+  phoneMobile?: string;
+  phoneBusiness?: string;
+  website?: string;
 }) => {
   const lines = ["BEGIN:VCARD", "VERSION:3.0"];
 
@@ -1464,10 +1472,38 @@ export const generateVCardQR = (contact: {
     lines.push(`FN:${fullName}`);
     lines.push(`N:${contact.lastName || ""};${contact.firstName || ""};;;`);
   }
+
+  if (contact.title) lines.push(`TITLE:${contact.title}`);
   if (contact.organization) lines.push(`ORG:${contact.organization}`);
-  if (contact.email) lines.push(`EMAIL:${contact.email}`);
-  if (contact.phone) lines.push(`TEL:${contact.phone}`);
-  if (contact.url) lines.push(`URL:${contact.url}`);
+
+  // Address
+  if (contact.street || contact.city || contact.zipCode || contact.country) {
+    const addressParts = [
+      "", // PO Box (empty)
+      "", // Extended address (empty)
+      contact.street || "",
+      contact.city || "",
+      "", // State/Province (empty)
+      contact.zipCode || "",
+      contact.country || "",
+    ];
+    lines.push(`ADR:${addressParts.join(";")}`);
+  }
+
+  // Phone numbers with types
+  if (contact.phonePersonal)
+    lines.push(`TEL;TYPE=HOME:${contact.phonePersonal}`);
+  if (contact.phoneMobile) lines.push(`TEL;TYPE=CELL:${contact.phoneMobile}`);
+  if (contact.phoneBusiness)
+    lines.push(`TEL;TYPE=WORK:${contact.phoneBusiness}`);
+
+  // Email addresses with types
+  if (contact.emailPersonal)
+    lines.push(`EMAIL;TYPE=HOME:${contact.emailPersonal}`);
+  if (contact.emailBusiness)
+    lines.push(`EMAIL;TYPE=WORK:${contact.emailBusiness}`);
+
+  if (contact.website) lines.push(`URL:${contact.website}`);
 
   lines.push("END:VCARD");
   return lines.join("\r\n");

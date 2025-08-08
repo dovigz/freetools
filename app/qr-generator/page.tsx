@@ -23,10 +23,12 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Copy,
+  DollarSign,
   Download,
   Image as ImageIcon,
   Link,
   Mail,
+  MessageCircle,
   Palette,
   Phone,
   RefreshCw,
@@ -35,6 +37,7 @@ import {
   Sparkles,
   Upload,
   User,
+  Video,
   Wifi,
 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -44,6 +47,98 @@ import QRWithFrame from "@/components/qr/QRWithFrame";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
 import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
+
+// Crypto QR code generator
+const generateCryptoQR = (crypto: {
+  type: "bitcoin" | "bitcoin-cash" | "ethereum" | "litecoin";
+  address: string;
+  amount: string;
+  message: string;
+}) => {
+  let scheme = "";
+  switch (crypto.type) {
+    case "bitcoin":
+      scheme = "bitcoin";
+      break;
+    case "bitcoin-cash":
+      scheme = "bitcoincash";
+      break;
+    case "ethereum":
+      scheme = "ethereum";
+      break;
+    case "litecoin":
+      scheme = "litecoin";
+      break;
+  }
+
+  if (!crypto.address) return "";
+
+  const params = new URLSearchParams();
+  if (crypto.amount) params.append("amount", crypto.amount);
+  if (crypto.message) params.append("message", crypto.message);
+
+  return `${scheme}:${crypto.address}${params.toString() ? `?${params.toString()}` : ""}`;
+};
+
+// SMS QR code generator
+const generateSMSQR = (sms: { phone: string; message: string }) => {
+  if (!sms.phone) return "";
+  return `sms:${sms.phone}${sms.message ? `?body=${encodeURIComponent(sms.message)}` : ""}`;
+};
+
+// WhatsApp QR code generator
+const generateWhatsAppQR = (whatsapp: { phone: string; message: string }) => {
+  if (!whatsapp.phone) return "";
+  const cleanPhone = whatsapp.phone.replace(/[^\d+]/g, "");
+  return `https://wa.me/${cleanPhone}${whatsapp.message ? `?text=${encodeURIComponent(whatsapp.message)}` : ""}`;
+};
+
+// Skype QR code generator
+const generateSkypeQR = (skype: { username: string }) => {
+  if (!skype.username) return "";
+  return `skype:${skype.username}?call`;
+};
+
+// Zoom QR code generator
+const generateZoomQR = (zoom: { meetingId: string; password: string }) => {
+  if (!zoom.meetingId) return "";
+  const params = new URLSearchParams();
+  if (zoom.password) params.append("pwd", zoom.password);
+  return `https://zoom.us/j/${zoom.meetingId}${params.toString() ? `?${params.toString()}` : ""}`;
+};
+
+// PayPal QR code generator
+const generatePayPalQR = (paypal: {
+  type: "buy-now" | "donate";
+  email: string;
+  itemName: string;
+  itemId: string;
+  price: string;
+  currency: string;
+  shipping: string;
+  taxRate: string;
+}) => {
+  if (!paypal.email) return "";
+
+  const baseUrl = "https://www.paypal.com/cgi-bin/webscr";
+  const params = new URLSearchParams();
+
+  if (paypal.type === "donate") {
+    params.append("cmd", "_donations");
+  } else {
+    params.append("cmd", "_xclick");
+  }
+
+  params.append("business", paypal.email);
+  if (paypal.itemName) params.append("item_name", paypal.itemName);
+  if (paypal.itemId) params.append("item_number", paypal.itemId);
+  if (paypal.price) params.append("amount", paypal.price);
+  params.append("currency_code", paypal.currency);
+  if (paypal.shipping) params.append("shipping", paypal.shipping);
+  if (paypal.taxRate) params.append("tax_rate", paypal.taxRate);
+
+  return `${baseUrl}?${params.toString()}`;
+};
 
 export default function QRGenerator() {
   const {
@@ -61,7 +156,18 @@ export default function QRGenerator() {
   } = useQRGenerator();
 
   const [dataType, setDataType] = useState<
-    "text" | "url" | "email" | "phone" | "wifi" | "vcard"
+    | "text"
+    | "url"
+    | "email"
+    | "phone"
+    | "wifi"
+    | "vcard"
+    | "crypto"
+    | "sms"
+    | "whatsapp"
+    | "skype"
+    | "zoom"
+    | "paypal"
   >("url");
   const [wifiData, setWifiData] = useState({
     ssid: "",
@@ -71,10 +177,49 @@ export default function QRGenerator() {
   const [vcardData, setVcardData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
-    phone: "",
+    title: "",
     organization: "",
-    url: "",
+    street: "",
+    city: "",
+    zipCode: "",
+    country: "",
+    emailPersonal: "",
+    emailBusiness: "",
+    phonePersonal: "",
+    phoneMobile: "",
+    phoneBusiness: "",
+    website: "",
+  });
+  const [cryptoData, setCryptoData] = useState({
+    type: "bitcoin" as "bitcoin" | "bitcoin-cash" | "ethereum" | "litecoin",
+    address: "",
+    amount: "",
+    message: "",
+  });
+  const [smsData, setSmsData] = useState({
+    phone: "",
+    message: "",
+  });
+  const [whatsappData, setWhatsappData] = useState({
+    phone: "",
+    message: "",
+  });
+  const [skypeData, setSkypeData] = useState({
+    username: "",
+  });
+  const [zoomData, setZoomData] = useState({
+    meetingId: "",
+    password: "",
+  });
+  const [paypalData, setPaypalData] = useState({
+    type: "buy-now" as "buy-now" | "donate",
+    email: "",
+    itemName: "",
+    itemId: "",
+    price: "",
+    currency: "USD",
+    shipping: "",
+    taxRate: "",
   });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -135,6 +280,48 @@ export default function QRGenerator() {
         });
         updateQRState({ data: vcardQRData });
         break;
+      case "crypto":
+        const cryptoQRData = generateCryptoQR({
+          ...cryptoData,
+          address: cryptoData.address || "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        });
+        updateQRState({ data: cryptoQRData });
+        break;
+      case "sms":
+        const smsQRData = generateSMSQR({
+          ...smsData,
+          phone: smsData.phone || "+1234567890",
+        });
+        updateQRState({ data: smsQRData });
+        break;
+      case "whatsapp":
+        const whatsappQRData = generateWhatsAppQR({
+          ...whatsappData,
+          phone: whatsappData.phone || "+1234567890",
+        });
+        updateQRState({ data: whatsappQRData });
+        break;
+      case "skype":
+        const skypeQRData = generateSkypeQR({
+          ...skypeData,
+          username: skypeData.username || "username",
+        });
+        updateQRState({ data: skypeQRData });
+        break;
+      case "zoom":
+        const zoomQRData = generateZoomQR({
+          ...zoomData,
+          meetingId: zoomData.meetingId || "123456789",
+        });
+        updateQRState({ data: zoomQRData });
+        break;
+      case "paypal":
+        const paypalQRData = generatePayPalQR({
+          ...paypalData,
+          email: paypalData.email || "seller@example.com",
+        });
+        updateQRState({ data: paypalQRData });
+        break;
       default:
         updateQRState({ data: "Hello, World!" });
     }
@@ -156,6 +343,51 @@ export default function QRGenerator() {
     const newVCardData = { ...vcardData, [field]: value };
     setVcardData(newVCardData);
     updateQRState({ data: generateVCardQR(newVCardData) });
+  };
+
+  const handleCryptoUpdate = (
+    field: keyof typeof cryptoData,
+    value: string
+  ) => {
+    const newCryptoData = { ...cryptoData, [field]: value };
+    setCryptoData(newCryptoData);
+    updateQRState({ data: generateCryptoQR(newCryptoData) });
+  };
+
+  const handleSmsUpdate = (field: keyof typeof smsData, value: string) => {
+    const newSmsData = { ...smsData, [field]: value };
+    setSmsData(newSmsData);
+    updateQRState({ data: generateSMSQR(newSmsData) });
+  };
+
+  const handleWhatsAppUpdate = (
+    field: keyof typeof whatsappData,
+    value: string
+  ) => {
+    const newWhatsAppData = { ...whatsappData, [field]: value };
+    setWhatsappData(newWhatsAppData);
+    updateQRState({ data: generateWhatsAppQR(newWhatsAppData) });
+  };
+
+  const handleSkypeUpdate = (field: keyof typeof skypeData, value: string) => {
+    const newSkypeData = { ...skypeData, [field]: value };
+    setSkypeData(newSkypeData);
+    updateQRState({ data: generateSkypeQR(newSkypeData) });
+  };
+
+  const handleZoomUpdate = (field: keyof typeof zoomData, value: string) => {
+    const newZoomData = { ...zoomData, [field]: value };
+    setZoomData(newZoomData);
+    updateQRState({ data: generateZoomQR(newZoomData) });
+  };
+
+  const handlePayPalUpdate = (
+    field: keyof typeof paypalData,
+    value: string
+  ) => {
+    const newPayPalData = { ...paypalData, [field]: value };
+    setPaypalData(newPayPalData);
+    updateQRState({ data: generatePayPalQR(newPayPalData) });
   };
 
   const handleDownload = async (format: "png" | "jpg" | "svg") => {
@@ -448,7 +680,7 @@ export default function QRGenerator() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Data Type Selector */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {[
                   { value: "url", label: "URL", icon: Link },
                   { value: "text", label: "Text", icon: Settings },
@@ -456,6 +688,12 @@ export default function QRGenerator() {
                   { value: "phone", label: "Phone", icon: Phone },
                   { value: "wifi", label: "WiFi", icon: Wifi },
                   { value: "vcard", label: "Contact", icon: User },
+                  { value: "crypto", label: "Crypto", icon: DollarSign },
+                  { value: "sms", label: "SMS", icon: MessageCircle },
+                  { value: "whatsapp", label: "WhatsApp", icon: MessageCircle },
+                  { value: "skype", label: "Skype", icon: Video },
+                  { value: "zoom", label: "Zoom", icon: Video },
+                  { value: "paypal", label: "PayPal", icon: DollarSign },
                 ].map(({ value, label, icon: Icon }) => (
                   <Button
                     key={value}
@@ -526,9 +764,10 @@ export default function QRGenerator() {
 
               {dataType === "vcard" && (
                 <div className="space-y-4">
+                  {/* Name Fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">First name</Label>
                       <Input
                         id="firstName"
                         value={vcardData.firstName}
@@ -539,45 +778,7 @@ export default function QRGenerator() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        value={vcardData.lastName}
-                        onChange={(e) =>
-                          handleVCardUpdate("lastName", e.target.value)
-                        }
-                        placeholder="Doe"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="vcardEmail">Email</Label>
-                      <Input
-                        id="vcardEmail"
-                        type="email"
-                        value={vcardData.email}
-                        onChange={(e) =>
-                          handleVCardUpdate("email", e.target.value)
-                        }
-                        placeholder="john@example.com"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="vcardPhone">Phone</Label>
-                      <Input
-                        id="vcardPhone"
-                        value={vcardData.phone}
-                        onChange={(e) =>
-                          handleVCardUpdate("phone", e.target.value)
-                        }
-                        placeholder="+1234567890"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="organization">Organization</Label>
+                      <Label htmlFor="organization">Company/Organisation</Label>
                       <Input
                         id="organization"
                         value={vcardData.organization}
@@ -587,13 +788,155 @@ export default function QRGenerator() {
                         placeholder="Company Name"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="vcardUrl">Website</Label>
+                      <Label htmlFor="lastName">Last name</Label>
                       <Input
-                        id="vcardUrl"
-                        value={vcardData.url}
+                        id="lastName"
+                        value={vcardData.lastName}
                         onChange={(e) =>
-                          handleVCardUpdate("url", e.target.value)
+                          handleVCardUpdate("lastName", e.target.value)
+                        }
+                        placeholder="Doe"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="emailPersonal">Email (personal)</Label>
+                      <Input
+                        id="emailPersonal"
+                        type="email"
+                        value={vcardData.emailPersonal}
+                        onChange={(e) =>
+                          handleVCardUpdate("emailPersonal", e.target.value)
+                        }
+                        placeholder="john@personal.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input
+                        id="title"
+                        value={vcardData.title}
+                        onChange={(e) =>
+                          handleVCardUpdate("title", e.target.value)
+                        }
+                        placeholder="Software Engineer"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="emailBusiness">Email (business)</Label>
+                      <Input
+                        id="emailBusiness"
+                        type="email"
+                        value={vcardData.emailBusiness}
+                        onChange={(e) =>
+                          handleVCardUpdate("emailBusiness", e.target.value)
+                        }
+                        placeholder="john@company.com"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="street">Street</Label>
+                      <Input
+                        id="street"
+                        value={vcardData.street}
+                        onChange={(e) =>
+                          handleVCardUpdate("street", e.target.value)
+                        }
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phonePersonal">Phone (personal)</Label>
+                      <Input
+                        id="phonePersonal"
+                        value={vcardData.phonePersonal}
+                        onChange={(e) =>
+                          handleVCardUpdate("phonePersonal", e.target.value)
+                        }
+                        placeholder="+1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="zipCode">Zip code</Label>
+                      <Input
+                        id="zipCode"
+                        value={vcardData.zipCode}
+                        onChange={(e) =>
+                          handleVCardUpdate("zipCode", e.target.value)
+                        }
+                        placeholder="12345"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phoneMobile">Phone (mobile)</Label>
+                      <Input
+                        id="phoneMobile"
+                        value={vcardData.phoneMobile}
+                        onChange={(e) =>
+                          handleVCardUpdate("phoneMobile", e.target.value)
+                        }
+                        placeholder="+1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={vcardData.city}
+                        onChange={(e) =>
+                          handleVCardUpdate("city", e.target.value)
+                        }
+                        placeholder="New York"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phoneBusiness">Phone (business)</Label>
+                      <Input
+                        id="phoneBusiness"
+                        value={vcardData.phoneBusiness}
+                        onChange={(e) =>
+                          handleVCardUpdate("phoneBusiness", e.target.value)
+                        }
+                        placeholder="+1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Input
+                        id="country"
+                        value={vcardData.country}
+                        onChange={(e) =>
+                          handleVCardUpdate("country", e.target.value)
+                        }
+                        placeholder="United States"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="website">Website</Label>
+                      <Input
+                        id="website"
+                        value={vcardData.website}
+                        onChange={(e) =>
+                          handleVCardUpdate("website", e.target.value)
                         }
                         placeholder="https://example.com"
                       />
@@ -602,7 +945,341 @@ export default function QRGenerator() {
                 </div>
               )}
 
-              {!["wifi", "vcard"].includes(dataType) && (
+              {dataType === "crypto" && (
+                <div className="space-y-4">
+                  {/* Cryptocurrency Type Selector */}
+                  <div>
+                    <Label className="text-sm font-medium mb-3 block">
+                      Cryptocurrency Type
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "bitcoin", label: "Bitcoin" },
+                        { value: "bitcoin-cash", label: "Bitcoin Cash" },
+                        { value: "ethereum", label: "Ethereum" },
+                        { value: "litecoin", label: "Litecoin" },
+                      ].map(({ value, label }) => (
+                        <div
+                          key={value}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="radio"
+                            id={`crypto-${value}`}
+                            name="cryptoType"
+                            value={value}
+                            checked={cryptoData.type === value}
+                            onChange={(e) =>
+                              handleCryptoUpdate("type", e.target.value)
+                            }
+                            className="w-4 h-4"
+                          />
+                          <Label
+                            htmlFor={`crypto-${value}`}
+                            className="text-sm cursor-pointer"
+                          >
+                            {label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Receiver Address */}
+                  <div>
+                    <Label htmlFor="cryptoAddress">Receiver Address</Label>
+                    <Input
+                      id="cryptoAddress"
+                      value={cryptoData.address}
+                      onChange={(e) =>
+                        handleCryptoUpdate("address", e.target.value)
+                      }
+                      placeholder="Enter wallet address"
+                      className="font-mono text-sm"
+                    />
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <Label htmlFor="cryptoAmount">Amount (Optional)</Label>
+                    <Input
+                      id="cryptoAmount"
+                      type="number"
+                      step="0.00000001"
+                      value={cryptoData.amount}
+                      onChange={(e) =>
+                        handleCryptoUpdate("amount", e.target.value)
+                      }
+                      placeholder="0.00000000"
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <Label htmlFor="cryptoMessage">Message (Optional)</Label>
+                    <Input
+                      id="cryptoMessage"
+                      value={cryptoData.message}
+                      onChange={(e) =>
+                        handleCryptoUpdate("message", e.target.value)
+                      }
+                      placeholder="Payment description"
+                    />
+                  </div>
+
+                  {/* Raw Text Preview */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                      Raw Text Check:
+                    </Label>
+                    <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border">
+                      <code className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">
+                        {generateCryptoQR(cryptoData) ||
+                          "Enter address to generate"}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SMS Form */}
+              {dataType === "sms" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="smsPhone">Phone Number</Label>
+                    <Input
+                      id="smsPhone"
+                      value={smsData.phone}
+                      onChange={(e) => updateSMS({ phone: e.target.value })}
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="smsMessage">Message (Optional)</Label>
+                    <Textarea
+                      id="smsMessage"
+                      value={smsData.message}
+                      onChange={(e) => updateSMS({ message: e.target.value })}
+                      placeholder="Enter your message"
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* WhatsApp Form */}
+              {dataType === "whatsapp" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="whatsappPhone">Phone Number</Label>
+                    <Input
+                      id="whatsappPhone"
+                      value={whatsappData.phone}
+                      onChange={(e) =>
+                        updateWhatsApp({ phone: e.target.value })
+                      }
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="whatsappMessage">Message (Optional)</Label>
+                    <Textarea
+                      id="whatsappMessage"
+                      value={whatsappData.message}
+                      onChange={(e) =>
+                        updateWhatsApp({ message: e.target.value })
+                      }
+                      placeholder="Enter your message"
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Skype Form */}
+              {dataType === "skype" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="skypeUsername">Skype Username</Label>
+                    <Input
+                      id="skypeUsername"
+                      value={skypeData.username}
+                      onChange={(e) =>
+                        updateSkype({ username: e.target.value })
+                      }
+                      placeholder="skype_username"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Zoom Form */}
+              {dataType === "zoom" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="zoomMeetingId">Meeting ID</Label>
+                    <Input
+                      id="zoomMeetingId"
+                      value={zoomData.meetingId}
+                      onChange={(e) =>
+                        updateZoom({ meetingId: e.target.value })
+                      }
+                      placeholder="123 456 7890"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="zoomPassword">Password (Optional)</Label>
+                    <Input
+                      id="zoomPassword"
+                      value={zoomData.password}
+                      onChange={(e) => updateZoom({ password: e.target.value })}
+                      placeholder="Meeting password"
+                      type="password"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* PayPal Form */}
+              {dataType === "paypal" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="paypalType">Payment Type</Label>
+                    <Select
+                      value={paypalData.type}
+                      onValueChange={(value) =>
+                        updatePayPal({ type: value as "buy-now" | "donate" })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="buy-now">Buy now</SelectItem>
+                        <SelectItem value="donate">Donate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="paypalEmail">Email</Label>
+                    <Input
+                      id="paypalEmail"
+                      type="email"
+                      value={paypalData.email}
+                      onChange={(e) => updatePayPal({ email: e.target.value })}
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="paypalItemName">Item Name</Label>
+                    <Input
+                      id="paypalItemName"
+                      value={paypalData.itemName}
+                      onChange={(e) =>
+                        updatePayPal({ itemName: e.target.value })
+                      }
+                      placeholder="Product or service name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="paypalItemId">Item ID (Optional)</Label>
+                    <Input
+                      id="paypalItemId"
+                      value={paypalData.itemId}
+                      onChange={(e) => updatePayPal({ itemId: e.target.value })}
+                      placeholder="SKU or ID"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="paypalPrice">Price</Label>
+                      <Input
+                        id="paypalPrice"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={paypalData.price}
+                        onChange={(e) =>
+                          updatePayPal({ price: e.target.value })
+                        }
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="paypalCurrency">Currency</Label>
+                      <Select
+                        value={paypalData.currency}
+                        onValueChange={(value) =>
+                          updatePayPal({ currency: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">
+                            United States dollar
+                          </SelectItem>
+                          <SelectItem value="EUR">Euro</SelectItem>
+                          <SelectItem value="GBP">British Pound</SelectItem>
+                          <SelectItem value="CAD">Canadian Dollar</SelectItem>
+                          <SelectItem value="AUD">Australian Dollar</SelectItem>
+                          <SelectItem value="JPY">Japanese Yen</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="paypalShipping">Shipping</Label>
+                      <Input
+                        id="paypalShipping"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={paypalData.shipping}
+                        onChange={(e) =>
+                          updatePayPal({ shipping: e.target.value })
+                        }
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">USD</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="paypalTaxRate">Tax Rate</Label>
+                      <div className="relative">
+                        <Input
+                          id="paypalTaxRate"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          value={paypalData.taxRate}
+                          onChange={(e) =>
+                            updatePayPal({ taxRate: e.target.value })
+                          }
+                          placeholder="0"
+                          className="pr-8"
+                        />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                          %
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {![
+                "wifi",
+                "vcard",
+                "crypto",
+                "sms",
+                "whatsapp",
+                "skype",
+                "zoom",
+                "paypal",
+              ].includes(dataType) && (
                 <div>
                   <Label htmlFor="qrData">
                     {dataType === "url" && "URL"}

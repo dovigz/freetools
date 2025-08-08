@@ -30,6 +30,7 @@ import {
   Palette,
   Phone,
   RefreshCw,
+  Scan,
   Settings,
   Sparkles,
   Upload,
@@ -75,6 +76,8 @@ export default function QRGenerator() {
     organization: "",
     url: "",
   });
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<string | null>(null);
   const qrRef = useRef<StyledQRCodeRef>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -178,8 +181,137 @@ export default function QRGenerator() {
     toast.success("QR code randomized!");
   };
 
+  const handleScanQR = async () => {
+    if (isScanning) return;
+    setIsScanning(true);
+
+    try {
+      // Start scanning animation
+      const scanOverlay = document.getElementById("scan-overlay");
+      const scanLine = document.getElementById("scan-line");
+      if (scanOverlay && scanLine) {
+        scanOverlay.style.display = "flex";
+        scanLine.style.animation = "scanDown 1.5s ease-in-out";
+      }
+
+      // Wait for animation
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Get QR code data directly from the state (most reliable method)
+      const qrData = qrState.data?.trim();
+      console.log("QR Data to scan:", qrData);
+
+      if (qrData) {
+        // Show modal with scan result
+        setScanResult(qrData);
+      } else {
+        setScanResult("No QR data found. Please generate a QR code first.");
+      }
+    } catch (error) {
+      console.error("QR scan error:", error);
+      setScanResult(
+        "QR code could not be read. Please change to a different color and try again."
+      );
+    } finally {
+      // Hide scan overlay and reset state
+      const scanOverlay = document.getElementById("scan-overlay");
+      if (scanOverlay) {
+        scanOverlay.style.display = "none";
+      }
+      setIsScanning(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Hidden div for QR scanning */}
+      <div id="temp-qr-reader" style={{ display: "none" }}></div>
+
+      {/* Scan Result Modal */}
+      {scanResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  {scanResult.includes("could not be read") ||
+                  scanResult.includes("No QR data") ? (
+                    <>❌ Scan Failed</>
+                  ) : (
+                    <>✅ QR Code Scanned Successfully!</>
+                  )}
+                </h2>
+                <button
+                  onClick={() => setScanResult(null)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <div className="p-6 max-h-96 overflow-y-auto">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                    Scanned Content:
+                  </label>
+                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg border">
+                    <pre className="text-sm font-mono break-all whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                      {scanResult}
+                    </pre>
+                  </div>
+                </div>
+                {!scanResult.includes("could not be read") &&
+                  !scanResult.includes("No QR data") && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Length: {scanResult.length} characters
+                    </div>
+                  )}
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+              {!scanResult.includes("could not be read") &&
+                !scanResult.includes("No QR data") && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(scanResult);
+                      toast.success("Copied to clipboard!");
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </button>
+                )}
+              <button
+                onClick={() => setScanResult(null)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Animation for scanning line */}
+      <style jsx>{`
+        @keyframes scanDown {
+          0% {
+            top: 0%;
+          }
+          50% {
+            top: 100%;
+          }
+          100% {
+            top: 0%;
+          }
+        }
+        #scan-overlay {
+          display: none;
+        }
+      `}</style>
+
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
           QR Code Generator
@@ -204,18 +336,50 @@ export default function QRGenerator() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* QR Code Display */}
-              <div className="flex justify-center p-8 bg-white rounded-lg border-2 border-dashed border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <QRWithFrame
-                  ref={qrRef}
-                  {...generateQROptions()}
-                  hasFrame={qrState.hasFrame}
-                  frameColor={qrState.frameColor}
-                  textColor={qrState.textColor}
-                  frameText={qrState.frameText}
-                  textPosition={qrState.textPosition}
-                  className="drop-shadow-sm"
-                  onQRCodeReady={handleQRReady}
-                />
+              <div className="flex justify-center p-8 bg-white rounded-lg border-2 border-dashed border-gray-200 dark:bg-gray-900 dark:border-gray-700 relative">
+                <div className="qr-code-container relative">
+                  <QRWithFrame
+                    ref={qrRef}
+                    {...generateQROptions()}
+                    hasFrame={qrState.hasFrame}
+                    frameColor={qrState.frameColor}
+                    textColor={qrState.textColor}
+                    frameText={qrState.frameText}
+                    textPosition={qrState.textPosition}
+                    className="drop-shadow-sm"
+                    onQRCodeReady={handleQRReady}
+                  />
+
+                  {/* Scanning Overlay */}
+                  <div
+                    id="scan-overlay"
+                    className="absolute inset-0 bg-black bg-opacity-50 rounded-lg items-center justify-center"
+                    style={{ display: "none" }}
+                  >
+                    <div className="relative w-full h-full">
+                      {/* Scanning Line */}
+                      <div
+                        id="scan-line"
+                        className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-lg"
+                        style={{
+                          top: "0%",
+                          boxShadow: "0 0 10px #ef4444, 0 0 20px #ef4444",
+                        }}
+                      />
+
+                      {/* Corner brackets */}
+                      <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
+                      <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
+                      <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-red-500"></div>
+                      <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-red-500"></div>
+
+                      {/* Scanning text */}
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium">
+                        Scanning QR Code...
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Quick Actions */}
@@ -246,14 +410,20 @@ export default function QRGenerator() {
                   <Copy className="w-4 h-4 mr-2" />
                   Copy to Clipboard
                 </Button>
-                <Button
-                  onClick={handleRandomize}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Randomize QR
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={handleRandomize} variant="outline">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Randomize QR
+                  </Button>
+                  <Button
+                    onClick={handleScanQR}
+                    variant="outline"
+                    disabled={isGenerating || isScanning}
+                  >
+                    <Scan className="w-4 h-4 mr-2" />
+                    {isScanning ? "Scanning..." : "Scan QR"}
+                  </Button>
+                </div>
               </div>
 
               {/* Data Type Indicator */}

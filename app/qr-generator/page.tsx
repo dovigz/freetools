@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { Html5Qrcode } from "html5-qrcode";
 
 import QRWithFrame from "@/components/qr/QRWithFrame";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
@@ -499,6 +500,36 @@ export default function QRGenerator() {
     updateQRState({ data: url });
   };
 
+  const updateSMS = (updates: Partial<typeof smsData>) => {
+    const newData = { ...smsData, ...updates };
+    setSmsData(newData);
+    updateQRState({ data: generateSMSQR(newData) });
+  };
+
+  const updateWhatsApp = (updates: Partial<typeof whatsappData>) => {
+    const newData = { ...whatsappData, ...updates };
+    setWhatsappData(newData);
+    updateQRState({ data: generateWhatsAppQR(newData) });
+  };
+
+  const updateSkype = (updates: Partial<typeof skypeData>) => {
+    const newData = { ...skypeData, ...updates };
+    setSkypeData(newData);
+    updateQRState({ data: generateSkypeQR(newData) });
+  };
+
+  const updateZoom = (updates: Partial<typeof zoomData>) => {
+    const newData = { ...zoomData, ...updates };
+    setZoomData(newData);
+    updateQRState({ data: generateZoomQR(newData) });
+  };
+
+  const updatePayPal = (updates: Partial<typeof paypalData>) => {
+    const newData = { ...paypalData, ...updates };
+    setPaypalData(newData);
+    updateQRState({ data: generatePayPalQR(newData) });
+  };
+
   const handleDownload = async (format: "png" | "jpg" | "svg") => {
     try {
       await downloadQR(format);
@@ -538,20 +569,160 @@ export default function QRGenerator() {
       // Wait for animation
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Get QR code data directly from the state (most reliable method)
-      const qrData = qrState.data?.trim();
-      console.log("QR Data to scan:", qrData);
-
-      if (qrData) {
-        // Show modal with scan result
-        setScanResult(qrData);
-      } else {
-        setScanResult("No QR data found. Please generate a QR code first.");
+      // Get the QR code from the DOM - look for SVG, canvas, or image elements
+      const qrCodeContainer = document.querySelector('.qr-code-container');
+      if (!qrCodeContainer) {
+        throw new Error('QR code container not found');
       }
+      
+      // Try to find SVG, Canvas, or Image elements
+      let qrSvg = qrCodeContainer.querySelector('svg');
+      let qrCanvas = qrCodeContainer.querySelector('canvas');
+      let qrImage = qrCodeContainer.querySelector('img');
+      
+      let imageElement = null;
+      
+      if (qrCanvas) {
+        console.log('Found canvas, converting to image...');
+        // Convert canvas to image for scanning
+        const dataURL = qrCanvas.toDataURL('image/png');
+        imageElement = new Image();
+        imageElement.src = dataURL;
+        await new Promise((resolve) => {
+          imageElement.onload = resolve;
+        });
+      } else if (qrSvg) {
+        console.log('Found SVG, converting to image...');
+        // Convert SVG to canvas then to image
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+        
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            canvas.width = img.naturalWidth || 300;
+            canvas.height = img.naturalHeight || 300;
+            ctx?.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            
+            // Convert canvas to image
+            imageElement = new Image();
+            imageElement.src = canvas.toDataURL('image/png');
+            imageElement.onload = resolve;
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+      } else if (qrImage) {
+        console.log('Found image element...');
+        imageElement = qrImage;
+      }
+
+      if (!imageElement) {
+        console.log('Available elements:', {
+          svg: !!qrSvg,
+          canvas: !!qrCanvas, 
+          image: !!qrImage,
+          containerContent: qrCodeContainer.innerHTML.slice(0, 200)
+        });
+        throw new Error('No QR code image found');
+      }
+
+      // Convert the image element to a File for html5-qrcode
+      let blob: Blob | null = null;
+      
+      if (qrCanvas) {
+        console.log('Converting canvas to blob...');
+        blob = await new Promise<Blob>((resolve, reject) => {
+          qrCanvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to create blob from canvas'));
+          }, 'image/png');
+        });
+      } else if (qrSvg) {
+        console.log('Converting SVG to blob...');
+        // For SVG, we need to create a canvas first
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            canvas.width = img.naturalWidth || 300;
+            canvas.height = img.naturalHeight || 300;
+            ctx?.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+        
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to create blob from SVG'));
+          }, 'image/png');
+        });
+      } else if (imageElement && imageElement.src) {
+        console.log('Converting image element to blob...');
+        // Convert image element to canvas then to blob
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = imageElement.naturalWidth || imageElement.width;
+        canvas.height = imageElement.naturalHeight || imageElement.height;
+        ctx?.drawImage(imageElement, 0, 0);
+        
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to create blob from image'));
+          }, 'image/png');
+        });
+      }
+
+      if (!blob) {
+        throw new Error('Failed to create blob from QR code');
+      }
+
+      // Create File object from blob
+      const file = new File([blob], 'qr-code.png', { type: 'image/png' });
+      console.log('Created file for scanning:', file.name, file.size, 'bytes');
+
+      // Use html5-qrcode to scan the file
+      const html5QrCode = new Html5Qrcode("temp-qr-reader");
+      
+      try {
+        const scanResult = await html5QrCode.scanFile(file, true);
+        console.log("Real QR scan result:", scanResult);
+        setScanResult(scanResult);
+      } catch (scanError) {
+        console.error("QR scan failed:", scanError);
+        
+        // Check if it's a contrast/readability issue
+        if (scanError.message && scanError.message.includes('finder patterns')) {
+          setScanResult(
+            "QR code found but could not be read! This is likely due to poor contrast between the QR dots and background. The scanner found the QR code but couldn't detect the corner finder patterns properly. Try using black dots on a white background for best readability."
+          );
+        } else {
+          setScanResult(
+            "QR code could not be read. This might be due to low contrast, unusual colors, or the QR code being too stylized. Try using higher contrast colors (black on white works best)."
+          );
+        }
+      }
+      
     } catch (error) {
       console.error("QR scan error:", error);
       setScanResult(
-        "QR code could not be read. Please change to a different color and try again."
+        "Failed to scan QR code. Please ensure the QR code is visible and try again."
       );
     } finally {
       // Hide scan overlay and reset state
@@ -576,7 +747,9 @@ export default function QRGenerator() {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   {scanResult.includes("could not be read") ||
-                  scanResult.includes("No QR data") ? (
+                  scanResult.includes("No QR data") ||
+                  scanResult.includes("Failed to scan") ||
+                  scanResult.includes("might be due to") ? (
                     <>❌ Scan Failed</>
                   ) : (
                     <>✅ QR Code Scanned Successfully!</>
@@ -603,7 +776,9 @@ export default function QRGenerator() {
                   </div>
                 </div>
                 {!scanResult.includes("could not be read") &&
-                  !scanResult.includes("No QR data") && (
+                  !scanResult.includes("No QR data") &&
+                  !scanResult.includes("Failed to scan") &&
+                  !scanResult.includes("might be due to") && (
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       Length: {scanResult.length} characters
                     </div>
@@ -612,7 +787,9 @@ export default function QRGenerator() {
             </div>
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
               {!scanResult.includes("could not be read") &&
-                !scanResult.includes("No QR data") && (
+                !scanResult.includes("No QR data") &&
+                !scanResult.includes("Failed to scan") &&
+                !scanResult.includes("might be due to") && (
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(scanResult);

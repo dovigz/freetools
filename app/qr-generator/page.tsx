@@ -874,7 +874,7 @@ export default function QRGenerator() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Panel - QR Preview */}
-        <div className="lg:col-span-1 max-h-screen overflow-y-auto">
+        <div className="lg:col-span-1 max-h-[calc(100vh-200px)] overflow-y-auto">
           <div className="sticky top-0 space-y-4">
             {/* Interactive Contrast Control */}
             <InteractiveContrastSlider

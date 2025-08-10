@@ -48,8 +48,8 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { InteractiveContrastSlider } from "@/components/qr/InteractiveContrastSlider";
 import QRWithFrame from "@/components/qr/QRWithFrame";
-import { SimpleContrastIndicator } from "@/components/qr/SimpleContrastIndicator";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
 import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
@@ -568,6 +568,18 @@ export default function QRGenerator() {
     });
   };
 
+  const handleContrastColorChange = (
+    newForeground: string,
+    newBackground: string
+  ) => {
+    updateQRState({
+      dotsColor: newForeground,
+      backgroundColor: newBackground,
+      cornersSquareColor: newForeground,
+      cornersDotColor: newForeground,
+    });
+  };
+
   const handleScanQR = async () => {
     if (isScanning) return;
     setIsScanning(true);
@@ -864,10 +876,11 @@ export default function QRGenerator() {
         {/* Left Panel - QR Preview */}
         <div className="lg:col-span-1 max-h-screen overflow-y-auto">
           <div className="sticky top-0 space-y-4">
-            {/* Contrast Safety Check */}
-            <SimpleContrastIndicator
+            {/* Interactive Contrast Control */}
+            <InteractiveContrastSlider
               foregroundColor={qrState.dotsColor}
               backgroundColor={qrState.backgroundColor}
+              onColorChange={handleContrastColorChange}
               onSwapColors={handleSwapColors}
             />
 

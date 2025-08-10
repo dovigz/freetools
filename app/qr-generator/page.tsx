@@ -49,9 +49,9 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { ContrastIndicator } from "@/components/qr/ContrastIndicator";
 import QRWithFrame from "@/components/qr/QRWithFrame";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
-import { ContrastIndicator } from "@/components/qr/ContrastIndicator";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
 import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
 
@@ -554,6 +554,21 @@ export default function QRGenerator() {
     toast.success("QR code randomized!");
   };
 
+  const handleSwapColors = () => {
+    const currentDotsColor = qrState.dotsColor;
+    const currentBackgroundColor =
+      qrState.backgroundColor === "transparent"
+        ? "#ffffff"
+        : qrState.backgroundColor;
+
+    updateQRState({
+      dotsColor: currentBackgroundColor,
+      backgroundColor: currentDotsColor,
+      cornersSquareColor: currentBackgroundColor,
+      cornersDotColor: currentBackgroundColor,
+    });
+  };
+
   const handleScanQR = async () => {
     if (isScanning) return;
     setIsScanning(true);
@@ -861,9 +876,10 @@ export default function QRGenerator() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Contrast Safety Check */}
-              <ContrastIndicator 
+              <ContrastIndicator
                 foregroundColor={qrState.dotsColor}
                 backgroundColor={qrState.backgroundColor}
+                onSwapColors={handleSwapColors}
               />
 
               {/* QR Code Display */}

@@ -119,8 +119,7 @@ export const emojiPresets: EmojiPreset[] = [
     id: "volcano",
     emoji: "🌋",
     name: "Volcano",
-    description:
-      "Full-compatibility molten lava theme (dark dots on light background)",
+    description: "Molten lava theme with contrast-safe colors",
     config: {
       dotsColor: "#8b0000",
       cornersSquareColor: "#9c1d1d",

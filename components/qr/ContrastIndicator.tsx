@@ -1,22 +1,31 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   calculateContrastRatio,
   getContrastLevel,
   suggestBetterColors,
 } from "@/lib/contrast-utils";
-import { AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  RefreshCcw,
+  XCircle,
+} from "lucide-react";
 
 interface ContrastIndicatorProps {
   foregroundColor: string;
   backgroundColor: string;
   className?: string;
+  onSwapColors?: () => void;
 }
 
 export function ContrastIndicator({
   foregroundColor,
   backgroundColor,
   className = "",
+  onSwapColors,
 }: ContrastIndicatorProps) {
   // Handle transparent background by using white as default
   const bgColor =
@@ -136,11 +145,23 @@ export function ContrastIndicator({
             <div>
               <p className="font-medium mb-1">{contrastLevel.description}</p>
               {contrastLevel.isInverted ? (
-                <p>
-                  ❌ Your QR code has inverted colors! QR scanners expect dark
-                  dots on a light background. This pattern will likely be read
-                  incorrectly or fail to scan entirely.
-                </p>
+                <div>
+                  <p className="mb-3">
+                    ❌ Your QR code has inverted colors! QR scanners expect dark
+                    dots on a light background. This pattern will likely be read
+                    incorrectly or fail to scan entirely.
+                  </p>
+                  {onSwapColors && (
+                    <Button
+                      onClick={onSwapColors}
+                      size="sm"
+                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      <RefreshCcw className="w-4 h-4 mr-2" />
+                      Swap Colors
+                    </Button>
+                  )}
+                </div>
               ) : contrastLevel.meetsMinimum ? (
                 <p>
                   ✅ Your QR code meets WCAG 2.1 minimum contrast requirements

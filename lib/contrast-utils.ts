@@ -96,28 +96,28 @@ export function getContrastLevel(
   if (ratio >= 7) {
     return {
       level: "aaa",
-      description: "AAA - Enhanced contrast",
+      description: "Excellent - Perfect for scanning",
       meetsMinimum: true,
       isInverted: false,
     };
   } else if (ratio >= 4.5) {
     return {
       level: "aa",
-      description: "AA - Good contrast",
+      description: "Good - Reliable scanning",
       meetsMinimum: true,
       isInverted: false,
     };
   } else if (ratio >= 3) {
     return {
       level: "aa-large",
-      description: "AA Large Text - Minimum for large text",
+      description: "Fair - May have scanning issues",
       meetsMinimum: false,
       isInverted: false,
     };
   } else {
     return {
       level: "fail",
-      description: "Fails WCAG - Poor contrast",
+      description: "Poor - Difficult to scan",
       meetsMinimum: false,
       isInverted: false,
     };

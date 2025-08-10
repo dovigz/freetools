@@ -44,7 +44,7 @@ const initialState: QRCodeState = {
   logoSize: 0.4,
   logoMargin: 0,
   // Frame settings
-  hasFrame: true,
+  hasFrame: false,
   frameColor: '#000000',
   textColor: '#ffffff',
   frameText: 'Scan for more info',
@@ -143,10 +143,6 @@ export const useQRGenerator = () => {
     const backgroundColor = Math.random() > 0.5 ? generateRandomColor() : 'transparent'
     const shapes = generateRandomShapes()
     
-    // Frame randomization
-    const textPositions = ['top', 'bottom']
-    const frameTexts = ['Scan for more info', 'Scan me!', 'Get more details', 'Visit our site', 'Learn more']
-    
     updateQRState({
       dotsColor,
       cornersSquareColor, 
@@ -155,15 +151,17 @@ export const useQRGenerator = () => {
       dotsType: shapes.dotsType as DotType,
       cornersSquareType: shapes.cornersSquareType as CornerSquareType,
       cornersDotType: shapes.cornersDotType as CornerDotType,
-      // Also randomize some other properties for fun
-      borderRadius: Math.floor(Math.random() * 25),
-      margin: Math.floor(Math.random() * 30) + 5,
-      // Frame randomization (30% chance to have frame)
-      hasFrame: Math.random() > 0.7,
-      frameColor: generateRandomColor(),
-      textColor: generateRandomColor(),
-      frameText: frameTexts[Math.floor(Math.random() * frameTexts.length)],
-      textPosition: textPositions[Math.floor(Math.random() * textPositions.length)] as any
+      // Reset dimensions and spacing to defaults
+      width: 300,
+      height: 300,
+      margin: 10,
+      borderRadius: 0,
+      // Frame always disabled
+      hasFrame: false,
+      frameColor: '#000000',
+      textColor: '#ffffff',
+      frameText: 'Scan for more info',
+      textPosition: 'bottom'
     })
   }, [updateQRState])
 

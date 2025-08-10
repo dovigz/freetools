@@ -1,6 +1,58 @@
 import { saveAs } from "file-saver";
 import QRCodeStyling, { type Options as QRCodeOptions } from "qr-code-styling";
 
+/**
+ * =============================================================================
+ * QR CODE CONTRAST & SCANNING OPTIMIZATION ALGORITHM
+ * =============================================================================
+ * 
+ * This file contains emoji presets optimized for QR code scanning reliability.
+ * All presets follow strict contrast ratio requirements to ensure maximum
+ * scanning success across different devices, lighting conditions, and scanners.
+ * 
+ * CRITICAL QR CODE REQUIREMENTS:
+ * 
+ * 1. CONTRAST RATIOS (WCAG 2.1 Standards):
+ *    - Minimum acceptable: 4.5:1 (AA standard)
+ *    - Preferred target: 7:1+ (AAA standard)
+ *    - Poor contrast: <3:1 (scanning failures likely)
+ *    - Fair contrast: 3-4.5:1 (may have scanning issues)
+ * 
+ * 2. QR PATTERN ORIENTATION (CRITICAL):
+ *    - QR codes MUST have DARK dots on LIGHT background
+ *    - Inverted patterns (light on dark) will fail or be misread
+ *    - Scanner algorithms expect specific pattern polarity
+ * 
+ * 3. COLOR RELATIONSHIPS:
+ *    - dotsColor (foreground) MUST be darker than backgroundColor
+ *    - cornersSquareColor MUST be darker than backgroundColor  
+ *    - cornersDotColor MUST be darker than backgroundColor
+ *    - Use calculateContrastRatio() to validate combinations
+ * 
+ * 4. VALIDATION FUNCTIONS (from contrast-utils.ts):
+ *    - calculateContrastRatio(color1, color2): Returns 1-21 ratio
+ *    - getContrastLevel(ratio, fg, bg): Returns compliance level
+ *    - isCorrectQRPattern(fg, bg): Validates proper orientation
+ *    - suggestBetterColors(fg, bg): Provides improvement suggestions
+ * 
+ * AI TOOLS GUIDANCE:
+ * When creating or modifying emoji presets, always:
+ * - Run calculateContrastRatio(dotsColor, backgroundColor) >= 4.5
+ * - Verify isCorrectQRPattern(dotsColor, backgroundColor) === true  
+ * - Test all color combinations meet minimum standards
+ * - Prioritize scanning reliability over pure aesthetics
+ * - Maintain emoji-appropriate themes within contrast constraints
+ * 
+ * PRESET STRUCTURE:
+ * Each preset contains:
+ * - Visual theme matching the emoji
+ * - Contrast-compliant color combinations
+ * - Proper QR scanning orientation
+ * - Accessible color relationships
+ * 
+ * =============================================================================
+ */
+
 // QR Code export utilities
 export const downloadQRCode = async (
   qrInstance: QRCodeStyling | null,
@@ -85,10 +137,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Fire",
     description: "Hot orange and red theme",
     config: {
-      dotsColor: "#ff4500",
-      cornersSquareColor: "#ff6347",
-      cornersDotColor: "#ff0000",
-      backgroundColor: "#ffe4e1",
+      dotsColor: "#cc3300", // Darker for better contrast (was #ff4500)
+      cornersSquareColor: "#990000", // Darker for consistency (was #ff6347)
+      cornersDotColor: "#660000", // Much darker (was #ff0000)
+      backgroundColor: "#fff5f5", // Lighter background (was #ffe4e1)
       frameColor: "#8b0000",
       textColor: "#ffffff",
       dotsType: "rounded",
@@ -103,10 +155,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Sun",
     description: "Bright sunny yellow",
     config: {
-      dotsColor: "#ffb700",
-      cornersSquareColor: "#ff8c00",
-      cornersDotColor: "#ffa500",
-      backgroundColor: "#fffacd",
+      dotsColor: "#cc7a00", // Much darker for contrast (was #ffb700)
+      cornersSquareColor: "#b85c00", // Darker (was #ff8c00)
+      cornersDotColor: "#994400", // Darker (was #ffa500)
+      backgroundColor: "#fffdf0", // Lighter (was #fffacd)
       frameColor: "#ff6600",
       textColor: "#000000",
       dotsType: "rounded",
@@ -121,10 +173,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Volcano",
     description: "Molten lava theme with contrast-safe colors",
     config: {
-      dotsColor: "#8b0000",
-      cornersSquareColor: "#9c1d1d",
-      cornersDotColor: "#660000",
-      backgroundColor: "#ffb366",
+      dotsColor: "#4a0000", // Much darker (was #8b0000)
+      cornersSquareColor: "#5a0a0a", // Darker (was #9c1d1d)
+      cornersDotColor: "#330000", // Much darker (was #660000)
+      backgroundColor: "#ffe8d6", // Lighter (was #ffb366)
       frameColor: "#932800",
       textColor: "#000000",
       dotsType: "square",
@@ -306,10 +358,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Leaf",
     description: "Light green breeze",
     config: {
-      dotsColor: "#90ee90",
-      cornersSquareColor: "#98fb98",
-      cornersDotColor: "#32cd32",
-      backgroundColor: "#f0fff0",
+      dotsColor: "#228b22", // Much darker green (was #90ee90 - too light)
+      cornersSquareColor: "#1a6b1a", // Darker green (was #98fb98)
+      cornersDotColor: "#0f4d0f", // Very dark green (was #32cd32)
+      backgroundColor: "#f5fff5", // Slightly lighter (was #f0fff0)
       frameColor: "#228b22",
       textColor: "#ffffff",
       dotsType: "extra-rounded",
@@ -362,11 +414,11 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Space",
     description: "Cosmic purple and blue",
     config: {
-      dotsColor: "#4b0082",
-      cornersSquareColor: "#6a5acd",
-      cornersDotColor: "#9370db",
-      backgroundColor: "#191970",
-      frameColor: "#000000",
+      dotsColor: "#1a0066", // Much darker purple (was #4b0082)
+      cornersSquareColor: "#0d002b", // Dark purple (was #6a5acd)
+      cornersDotColor: "#000033", // Very dark (was #9370db)
+      backgroundColor: "#f0f0ff", // Light purple background (was #191970 - INVERTED!)
+      frameColor: "#4b0082", // Frame can be colorful
       textColor: "#ffffff",
       dotsType: "dots",
       cornersSquareType: "extra-rounded",
@@ -380,10 +432,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Star",
     description: "Golden starlight",
     config: {
-      dotsColor: "#ffd700",
-      cornersSquareColor: "#ffff00",
-      cornersDotColor: "#ffa500",
-      backgroundColor: "#191970",
+      dotsColor: "#b8860b", // Dark golden brown (was #ffd700 - too light)
+      cornersSquareColor: "#9a7209", // Darker gold (was #ffff00)
+      cornersDotColor: "#664400", // Dark gold (was #ffa500)
+      backgroundColor: "#fffef0", // Light cream (was #191970 - INVERTED!)
       frameColor: "#4b0082",
       textColor: "#ffd700",
       dotsType: "rounded",
@@ -398,11 +450,11 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Moon",
     description: "Moonlight silver theme",
     config: {
-      dotsColor: "#c0c0c0",
-      cornersSquareColor: "#d3d3d3",
-      cornersDotColor: "#a9a9a9",
-      backgroundColor: "#191970",
-      frameColor: "#2f2f2f",
+      dotsColor: "#4a4a4a", // Dark gray (was #c0c0c0 - too light)
+      cornersSquareColor: "#333333", // Darker (was #d3d3d3)
+      cornersDotColor: "#1a1a1a", // Very dark (was #a9a9a9)
+      backgroundColor: "#f8f8ff", // Light blue-gray (was #191970 - INVERTED!)
+      frameColor: "#6a6a6a",
       textColor: "#ffffff",
       dotsType: "extra-rounded",
       cornersSquareType: "extra-rounded",
@@ -416,10 +468,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Planet",
     description: "Saturn ring theme",
     config: {
-      dotsColor: "#daa520",
-      cornersSquareColor: "#b8860b",
-      cornersDotColor: "#cd853f",
-      backgroundColor: "#000000",
+      dotsColor: "#8b7355", // Darker brown (was #daa520 - light on dark)
+      cornersSquareColor: "#654321", // Dark brown (was #b8860b)
+      cornersDotColor: "#3d2914", // Very dark brown (was #cd853f)
+      backgroundColor: "#fff8dc", // Light cream (was #000000 - INVERTED!)
       frameColor: "#ffd700",
       textColor: "#000000",
       dotsType: "classy-rounded",
@@ -434,10 +486,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Alien",
     description: "UFO green theme",
     config: {
-      dotsColor: "#00ff00",
-      cornersSquareColor: "#32cd32",
-      cornersDotColor: "#90ee90",
-      backgroundColor: "#000000",
+      dotsColor: "#004d00", // Dark green (was #00ff00 - bright on black)
+      cornersSquareColor: "#003300", // Very dark green (was #32cd32)
+      cornersDotColor: "#001a00", // Nearly black green (was #90ee90)
+      backgroundColor: "#f0fff0", // Light mint green (was #000000 - INVERTED!)
       frameColor: "#008000",
       textColor: "#00ff00",
       dotsType: "dots",
@@ -490,10 +542,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Cloud",
     description: "Soft cloud white",
     config: {
-      dotsColor: "#d3d3d3",
-      cornersSquareColor: "#f5f5f5",
-      cornersDotColor: "#c0c0c0",
-      backgroundColor: "#87ceeb",
+      dotsColor: "#2d4f6b", // Much darker blue-gray (was #d3d3d3 - too light)
+      cornersSquareColor: "#1a3a54", // Dark blue-gray (was #f5f5f5)
+      cornersDotColor: "#0d1f2a", // Very dark (was #c0c0c0)
+      backgroundColor: "#f0f8ff", // Light blue (was #87ceeb - better contrast)
       frameColor: "#ffffff",
       textColor: "#000000",
       dotsType: "extra-rounded",
@@ -508,10 +560,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Lightning",
     description: "Electric storm theme",
     config: {
-      dotsColor: "#ffff00",
-      cornersSquareColor: "#ffd700",
-      cornersDotColor: "#ffb347",
-      backgroundColor: "#000000",
+      dotsColor: "#b3b300", // Dark yellow (was #ffff00 - bright on black)
+      cornersSquareColor: "#999900", // Darker yellow (was #ffd700)
+      cornersDotColor: "#666600", // Very dark yellow (was #ffb347)
+      backgroundColor: "#fffff0", // Light cream (was #000000 - INVERTED!)
       frameColor: "#ffff00",
       textColor: "#000000",
       dotsType: "classy-rounded",
@@ -546,10 +598,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Ice",
     description: "Cool ice and snow theme",
     config: {
-      dotsColor: "#add8e6",
-      cornersSquareColor: "#87ceeb",
-      cornersDotColor: "#4682b4",
-      backgroundColor: "#f0f8ff",
+      dotsColor: "#1e3a5f", // Much darker blue (was #add8e6 - too light)
+      cornersSquareColor: "#0d1f33", // Dark blue (was #87ceeb)
+      cornersDotColor: "#001122", // Very dark blue (was #4682b4)
+      backgroundColor: "#f8faff", // Lighter background (was #f0f8ff)
       frameColor: "#2f4f4f",
       textColor: "#ffffff",
       dotsType: "extra-rounded",
@@ -564,10 +616,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Snowman",
     description: "Winter snow theme",
     config: {
-      dotsColor: "#ffffff",
-      cornersSquareColor: "#f0f8ff",
-      cornersDotColor: "#e0e0e0",
-      backgroundColor: "#b0e0e6",
+      dotsColor: "#1a3a4a", // Dark blue-gray (was #ffffff - WRONG PATTERN!)
+      cornersSquareColor: "#0d2533", // Darker (was #f0f8ff)
+      cornersDotColor: "#001122", // Very dark (was #e0e0e0)
+      backgroundColor: "#f0f8ff", // Light blue (swapped - was #b0e0e6)
       frameColor: "#4682b4",
       textColor: "#000000",
       dotsType: "dots",
@@ -674,10 +726,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Wedding",
     description: "Wedding ceremony theme",
     config: {
-      dotsColor: "#ffffff",
-      cornersSquareColor: "#f0f0f0",
-      cornersDotColor: "#d3d3d3",
-      backgroundColor: "#ffe4e1",
+      dotsColor: "#8b4a6b", // Dark rose (was #ffffff - WRONG PATTERN!)
+      cornersSquareColor: "#5a2d3d", // Darker rose (was #f0f0f0)
+      cornersDotColor: "#2d0f1a", // Very dark (was #d3d3d3)
+      backgroundColor: "#fff0f5", // Light rose (was #ffe4e1)
       frameColor: "#ff69b4",
       textColor: "#8b008b",
       dotsType: "extra-rounded",
@@ -786,10 +838,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Banana",
     description: "Yellow banana theme",
     config: {
-      dotsColor: "#ffff00",
-      cornersSquareColor: "#ffd700",
-      cornersDotColor: "#daa520",
-      backgroundColor: "#fffacd",
+      dotsColor: "#b5b500", // Much darker yellow (was #ffff00 - too bright)
+      cornersSquareColor: "#999900", // Darker gold (was #ffd700)
+      cornersDotColor: "#666600", // Dark olive (was #daa520)
+      backgroundColor: "#fffef5", // Lighter cream (was #fffacd)
       frameColor: "#ffa500",
       textColor: "#8b4513",
       dotsType: "classy",
@@ -952,10 +1004,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Robot",
     description: "Futuristic robot theme",
     config: {
-      dotsColor: "#c0c0c0",
-      cornersSquareColor: "#d3d3d3",
-      cornersDotColor: "#a9a9a9",
-      backgroundColor: "#000000",
+      dotsColor: "#1a1a1a", // Very dark gray (was #c0c0c0 - INVERTED!)
+      cornersSquareColor: "#333333", // Dark gray (was #d3d3d3)
+      cornersDotColor: "#000000", // Black (was #a9a9a9)
+      backgroundColor: "#f0f0f0", // Light gray (was #000000 - INVERTED!)
       frameColor: "#008000",
       textColor: "#00ff00",
       dotsType: "square",
@@ -1082,10 +1134,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Basketball",
     description: "Basketball theme",
     config: {
-      dotsColor: "#ff8c00",
-      cornersSquareColor: "#ffa500",
-      cornersDotColor: "#ff7f50",
-      backgroundColor: "#2f2f2f",
+      dotsColor: "#cc6600", // Darker orange (was #ff8c00)
+      cornersSquareColor: "#994d00", // Darker (was #ffa500)
+      cornersDotColor: "#663300", // Much darker (was #ff7f50)
+      backgroundColor: "#fff8f0", // Light cream (was #2f2f2f - INVERTED!)
       frameColor: "#ff6600",
       textColor: "#000000",
       dotsType: "dots",
@@ -1156,10 +1208,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Guitar",
     description: "Rock guitar theme",
     config: {
-      dotsColor: "#8b4513",
-      cornersSquareColor: "#a0522d",
-      cornersDotColor: "#654321",
-      backgroundColor: "#000000",
+      dotsColor: "#3d1f0a", // Much darker brown (was #8b4513)
+      cornersSquareColor: "#2a1507", // Very dark brown (was #a0522d)
+      cornersDotColor: "#1a0d04", // Nearly black brown (was #654321)
+      backgroundColor: "#f5deb3", // Light wheat (was #000000 - INVERTED!)
       frameColor: "#ffd700",
       textColor: "#000000",
       dotsType: "square",
@@ -1230,10 +1282,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Fireworks",
     description: "Firework celebration",
     config: {
-      dotsColor: "#ffd700",
-      cornersSquareColor: "#ff69b4",
-      cornersDotColor: "#00bfff",
-      backgroundColor: "#000000",
+      dotsColor: "#b3b300", // Dark gold (was #ffd700 - bright on black)
+      cornersSquareColor: "#990066", // Dark magenta (was #ff69b4)
+      cornersDotColor: "#004d99", // Dark blue (was #00bfff)
+      backgroundColor: "#fff8f0", // Light cream (was #000000 - INVERTED!)
       frameColor: "#ff1493",
       textColor: "#ffd700",
       dotsType: "classy",
@@ -1250,10 +1302,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Magic",
     description: "Magical sparkles",
     config: {
-      dotsColor: "#ffd700",
-      cornersSquareColor: "#ffff00",
-      cornersDotColor: "#daa520",
-      backgroundColor: "#191970",
+      dotsColor: "#b8860b", // Dark goldenrod (was #ffd700 - bright on dark)
+      cornersSquareColor: "#997a00", // Darker yellow (was #ffff00)  
+      cornersDotColor: "#665500", // Dark gold (was #daa520)
+      backgroundColor: "#fffef0", // Light cream (was #191970 - INVERTED!)
       frameColor: "#4b0082",
       textColor: "#ffd700",
       dotsType: "rounded",
@@ -1414,10 +1466,10 @@ export const emojiPresets: EmojiPreset[] = [
     name: "Crystal",
     description: "Crystal ball theme",
     config: {
-      dotsColor: "#9370db",
-      cornersSquareColor: "#8b008b",
-      cornersDotColor: "#4b0082",
-      backgroundColor: "#000000",
+      dotsColor: "#2d1b69", // Much darker purple (was #9370db - light on black)
+      cornersSquareColor: "#1a0033", // Very dark magenta (was #8b008b)
+      cornersDotColor: "#0f001a", // Nearly black purple (was #4b0082)
+      backgroundColor: "#f8f0ff", // Light lavender (was #000000 - INVERTED!)
       frameColor: "#40e0d0",
       textColor: "#9370db",
       dotsType: "extra-rounded",

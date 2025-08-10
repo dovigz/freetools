@@ -1000,40 +1000,128 @@ export default function QRGenerator() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Data Type Selector */}
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { value: "url", label: "URL", icon: Link },
-                  { value: "text", label: "Text", icon: Settings },
-                  { value: "email", label: "Email", icon: Mail },
-                  { value: "phone", label: "Phone", icon: Phone },
-                  { value: "wifi", label: "WiFi", icon: Wifi },
-                  { value: "vcard", label: "Contact", icon: User },
-                  { value: "crypto", label: "Crypto", icon: DollarSign },
-                  { value: "sms", label: "SMS", icon: MessageCircle },
-                  { value: "whatsapp", label: "WhatsApp", icon: MessageCircle },
-                  { value: "skype", label: "Skype", icon: Video },
-                  { value: "zoom", label: "Zoom", icon: Video },
-                  { value: "paypal", label: "PayPal", icon: DollarSign },
-                  { value: "facebook", label: "Facebook", icon: Facebook },
-                  { value: "twitter", label: "Twitter", icon: Twitter },
-                  { value: "instagram", label: "Instagram", icon: Instagram },
-                  { value: "linkedin", label: "LinkedIn", icon: Linkedin },
-                  { value: "tiktok", label: "TikTok", icon: Video },
-                  { value: "youtube", label: "YouTube", icon: Youtube },
-                ].map(({ value, label, icon: Icon }) => (
-                  <Button
-                    key={value}
-                    variant={dataType === value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() =>
-                      handleDataTypeChange(value as typeof dataType)
-                    }
-                    className="flex flex-col h-auto py-3"
-                  >
-                    <Icon className="w-4 h-4 mb-1" />
-                    <span className="text-xs">{label}</span>
-                  </Button>
-                ))}
+              <div className="space-y-2">
+                <Label htmlFor="content-type">Content Type</Label>
+                <Select
+                  value={dataType}
+                  onValueChange={(value) =>
+                    handleDataTypeChange(value as typeof dataType)
+                  }
+                >
+                  <SelectTrigger id="content-type" className="w-full">
+                    <SelectValue placeholder="Choose content type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="url">
+                      <div className="flex items-center gap-2">
+                        <Link className="w-4 h-4" />
+                        <span>URL - Website Link</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="text">
+                      <div className="flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        <span>Text - Plain Text</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="email">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        <span>Email - Email Address</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="phone">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        <span>Phone - Phone Number</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="wifi">
+                      <div className="flex items-center gap-2">
+                        <Wifi className="w-4 h-4" />
+                        <span>WiFi - Network Credentials</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="vcard">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span>Contact - Business Card</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="crypto">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span>Crypto - Wallet Address</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="sms">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>SMS - Text Message</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="whatsapp">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>WhatsApp - Message</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="skype">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4" />
+                        <span>Skype - Video Call</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="zoom">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4" />
+                        <span>Zoom - Meeting Link</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="paypal">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span>PayPal - Payment Link</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="facebook">
+                      <div className="flex items-center gap-2">
+                        <Facebook className="w-4 h-4" />
+                        <span>Facebook - Profile/Page</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="twitter">
+                      <div className="flex items-center gap-2">
+                        <Twitter className="w-4 h-4" />
+                        <span>Twitter - Profile/Tweet</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="instagram">
+                      <div className="flex items-center gap-2">
+                        <Instagram className="w-4 h-4" />
+                        <span>Instagram - Profile</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="linkedin">
+                      <div className="flex items-center gap-2">
+                        <Linkedin className="w-4 h-4" />
+                        <span>LinkedIn - Profile</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="tiktok">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4" />
+                        <span>TikTok - Profile</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="youtube">
+                      <div className="flex items-center gap-2">
+                        <Youtube className="w-4 h-4" />
+                        <span>YouTube - Channel/Video</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Separator />

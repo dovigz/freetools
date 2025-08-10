@@ -38,7 +38,6 @@ import {
   RefreshCw,
   Scan,
   Settings,
-  Sparkles,
   Twitter,
   Upload,
   User,
@@ -49,8 +48,8 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { ContrastIndicator } from "@/components/qr/ContrastIndicator";
 import QRWithFrame from "@/components/qr/QRWithFrame";
+import { SimpleContrastIndicator } from "@/components/qr/SimpleContrastIndicator";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
 import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
@@ -863,128 +862,121 @@ export default function QRGenerator() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Panel - QR Preview */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                QR Code Preview
-              </CardTitle>
-              <CardDescription>
-                Your generated QR code will appear here
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Contrast Safety Check */}
-              <ContrastIndicator
-                foregroundColor={qrState.dotsColor}
-                backgroundColor={qrState.backgroundColor}
-                onSwapColors={handleSwapColors}
-              />
+        <div className="lg:col-span-1 max-h-screen overflow-y-auto">
+          <div className="sticky top-0 space-y-4">
+            {/* Contrast Safety Check */}
+            <SimpleContrastIndicator
+              foregroundColor={qrState.dotsColor}
+              backgroundColor={qrState.backgroundColor}
+              onSwapColors={handleSwapColors}
+            />
 
-              {/* QR Code Display */}
-              <div className="flex justify-center p-8 relative">
-                <div className="qr-code-container relative">
-                  <QRWithFrame
-                    ref={qrRef}
-                    {...generateQROptions()}
-                    hasFrame={qrState.hasFrame}
-                    frameColor={qrState.frameColor}
-                    textColor={qrState.textColor}
-                    frameText={qrState.frameText}
-                    textPosition={qrState.textPosition}
-                    className="drop-shadow-sm"
-                    onQRCodeReady={handleQRReady}
-                  />
+            {/* QR Code Display */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-center relative">
+                  <div className="qr-code-container relative">
+                    <QRWithFrame
+                      ref={qrRef}
+                      {...generateQROptions()}
+                      hasFrame={qrState.hasFrame}
+                      frameColor={qrState.frameColor}
+                      textColor={qrState.textColor}
+                      frameText={qrState.frameText}
+                      textPosition={qrState.textPosition}
+                      className="drop-shadow-sm"
+                      onQRCodeReady={handleQRReady}
+                    />
 
-                  {/* Scanning Overlay */}
-                  <div
-                    id="scan-overlay"
-                    className="absolute inset-0 bg-black bg-opacity-50 rounded-lg items-center justify-center"
-                    style={{ display: "none" }}
-                  >
-                    <div className="relative w-full h-full">
-                      {/* Scanning Line */}
-                      <div
-                        id="scan-line"
-                        className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-lg"
-                        style={{
-                          top: "0%",
-                          boxShadow: "0 0 10px #ef4444, 0 0 20px #ef4444",
-                        }}
-                      />
+                    {/* Scanning Overlay */}
+                    <div
+                      id="scan-overlay"
+                      className="absolute inset-0 bg-black bg-opacity-50 rounded-lg items-center justify-center"
+                      style={{ display: "none" }}
+                    >
+                      <div className="relative w-full h-full">
+                        {/* Scanning Line */}
+                        <div
+                          id="scan-line"
+                          className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-lg"
+                          style={{
+                            top: "0%",
+                            boxShadow: "0 0 10px #ef4444, 0 0 20px #ef4444",
+                          }}
+                        />
 
-                      {/* Corner brackets */}
-                      <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
-                      <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
-                      <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-red-500"></div>
-                      <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-red-500"></div>
+                        {/* Corner brackets */}
+                        <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
+                        <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
+                        <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-red-500"></div>
+                        <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-red-500"></div>
 
-                      {/* Scanning text */}
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium">
-                        Scanning QR Code...
+                        {/* Scanning text */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium">
+                          Scanning QR Code...
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
+                {/* Quick Actions */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => handleDownload("png")}
+                      disabled={isGenerating}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      PNG
+                    </Button>
+                    <Button
+                      onClick={() => handleDownload("svg")}
+                      variant="outline"
+                      disabled={isGenerating}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      SVG
+                    </Button>
+                  </div>
                   <Button
-                    onClick={() => handleDownload("png")}
+                    onClick={handleCopy}
+                    variant="outline"
+                    className="w-full"
                     disabled={isGenerating}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    PNG
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy to Clipboard
                   </Button>
-                  <Button
-                    onClick={() => handleDownload("svg")}
-                    variant="outline"
-                    disabled={isGenerating}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    SVG
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={handleRandomize} variant="outline">
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Randomize QR
+                    </Button>
+                    <Button
+                      onClick={handleScanQR}
+                      variant="outline"
+                      disabled={isGenerating || isScanning}
+                    >
+                      <Scan className="w-4 h-4 mr-2" />
+                      {isScanning ? "Scanning..." : "Scan QR"}
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  onClick={handleCopy}
-                  variant="outline"
-                  className="w-full"
-                  disabled={isGenerating}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy to Clipboard
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={handleRandomize} variant="outline">
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Randomize QR
-                  </Button>
-                  <Button
-                    onClick={handleScanQR}
-                    variant="outline"
-                    disabled={isGenerating || isScanning}
-                  >
-                    <Scan className="w-4 h-4 mr-2" />
-                    {isScanning ? "Scanning..." : "Scan QR"}
-                  </Button>
-                </div>
-              </div>
 
-              {/* Data Type Indicator */}
-              <div className="flex items-center justify-center">
-                <Badge variant="secondary" className="text-xs">
-                  {dataType.toUpperCase()} • {qrState.data.length} chars
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Data Type Indicator */}
+                <div className="flex items-center justify-center">
+                  <Badge variant="secondary" className="text-xs">
+                    {dataType.toUpperCase()} • {qrState.data.length} chars
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right Panel - All Configuration Options */}
-        <div className="lg:col-span-2 space-y-6 max-h-screen overflow-y-auto">
+        <div className="lg:col-span-2 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
           {/* Content Configuration */}
           <Card>
             <CardHeader>

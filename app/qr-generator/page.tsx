@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -259,8 +265,17 @@ export default function QRGenerator() {
   });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
+  const [hasEverScanned, setHasEverScanned] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState<"png" | "svg">("png");
   const qrRef = useRef<StyledQRCodeRef>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Wrapper function to reset scan state whenever QR changes
+  const updateQRStateAndReset = (updates: any) => {
+    updateQRState(updates);
+    setHasEverScanned(false);
+  };
 
   const handleQRReady = (qrInstance: any) => {
     setQRInstance(qrInstance);
@@ -272,7 +287,7 @@ export default function QRGenerator() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        updateQRState({ logo: result });
+        updateQRStateAndReset({ logo: result });
         toast.success("Logo uploaded successfully!");
       };
       reader.readAsDataURL(file);
@@ -292,13 +307,13 @@ export default function QRGenerator() {
 
     switch (type) {
       case "url":
-        updateQRState({ data: "https://freetools.vercel.app" });
+        updateQRStateAndReset({ data: "https://freetools.vercel.app" });
         break;
       case "email":
-        updateQRState({ data: "contact@example.com" });
+        updateQRStateAndReset({ data: "contact@example.com" });
         break;
       case "phone":
-        updateQRState({ data: "+1234567890" });
+        updateQRStateAndReset({ data: "+1234567890" });
         break;
       case "wifi":
         const wifiQRData = generateWiFiQR(
@@ -306,7 +321,7 @@ export default function QRGenerator() {
           wifiData.password || "",
           wifiData.security
         );
-        updateQRState({ data: wifiQRData });
+        updateQRStateAndReset({ data: wifiQRData });
         break;
       case "vcard":
         const vcardQRData = generateVCardQR({
@@ -314,91 +329,91 @@ export default function QRGenerator() {
           firstName: vcardData.firstName || "John",
           lastName: vcardData.lastName || "Doe",
         });
-        updateQRState({ data: vcardQRData });
+        updateQRStateAndReset({ data: vcardQRData });
         break;
       case "crypto":
         const cryptoQRData = generateCryptoQR({
           ...cryptoData,
           address: cryptoData.address || "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
         });
-        updateQRState({ data: cryptoQRData });
+        updateQRStateAndReset({ data: cryptoQRData });
         break;
       case "sms":
         const smsQRData = generateSMSQR({
           ...smsData,
           phone: smsData.phone || "+1234567890",
         });
-        updateQRState({ data: smsQRData });
+        updateQRStateAndReset({ data: smsQRData });
         break;
       case "whatsapp":
         const whatsappQRData = generateWhatsAppQR({
           ...whatsappData,
           phone: whatsappData.phone || "+1234567890",
         });
-        updateQRState({ data: whatsappQRData });
+        updateQRStateAndReset({ data: whatsappQRData });
         break;
       case "skype":
         const skypeQRData = generateSkypeQR({
           ...skypeData,
           username: skypeData.username || "username",
         });
-        updateQRState({ data: skypeQRData });
+        updateQRStateAndReset({ data: skypeQRData });
         break;
       case "zoom":
         const zoomQRData = generateZoomQR({
           ...zoomData,
           meetingId: zoomData.meetingId || "123456789",
         });
-        updateQRState({ data: zoomQRData });
+        updateQRStateAndReset({ data: zoomQRData });
         break;
       case "paypal":
         const paypalQRData = generatePayPalQR({
           ...paypalData,
           email: paypalData.email || "seller@example.com",
         });
-        updateQRState({ data: paypalQRData });
+        updateQRStateAndReset({ data: paypalQRData });
         break;
       case "facebook":
         const fbUrl =
           facebookData.url || `https://facebook.com/${facebookData.username}`;
-        updateQRState({ data: fbUrl });
+        updateQRStateAndReset({ data: fbUrl });
         break;
       case "twitter":
         const twitterUrl =
           twitterData.url || `https://twitter.com/${twitterData.username}`;
-        updateQRState({ data: twitterUrl });
+        updateQRStateAndReset({ data: twitterUrl });
         break;
       case "instagram":
         const instaUrl =
           instagramData.url ||
           `https://instagram.com/${instagramData.username}`;
-        updateQRState({ data: instaUrl });
+        updateQRStateAndReset({ data: instaUrl });
         break;
       case "linkedin":
         const linkedinUrl =
           linkedinData.url ||
           `https://linkedin.com/in/${linkedinData.username}`;
-        updateQRState({ data: linkedinUrl });
+        updateQRStateAndReset({ data: linkedinUrl });
         break;
       case "tiktok":
         const tiktokUrl =
           tiktokData.url || `https://tiktok.com/@${tiktokData.username}`;
-        updateQRState({ data: tiktokUrl });
+        updateQRStateAndReset({ data: tiktokUrl });
         break;
       case "youtube":
         const youtubeUrl =
           youtubeData.url || `https://youtube.com/c/${youtubeData.channel}`;
-        updateQRState({ data: youtubeUrl });
+        updateQRStateAndReset({ data: youtubeUrl });
         break;
       default:
-        updateQRState({ data: "Hello, World!" });
+        updateQRStateAndReset({ data: "Hello, World!" });
     }
   };
 
   const handleWifiUpdate = (field: keyof typeof wifiData, value: string) => {
     const newWifiData = { ...wifiData, [field]: value };
     setWifiData(newWifiData);
-    updateQRState({
+    updateQRStateAndReset({
       data: generateWiFiQR(
         newWifiData.ssid,
         newWifiData.password,
@@ -410,7 +425,7 @@ export default function QRGenerator() {
   const handleVCardUpdate = (field: keyof typeof vcardData, value: string) => {
     const newVCardData = { ...vcardData, [field]: value };
     setVcardData(newVCardData);
-    updateQRState({ data: generateVCardQR(newVCardData) });
+    updateQRStateAndReset({ data: generateVCardQR(newVCardData) });
   };
 
   const handleCryptoUpdate = (
@@ -419,13 +434,13 @@ export default function QRGenerator() {
   ) => {
     const newCryptoData = { ...cryptoData, [field]: value };
     setCryptoData(newCryptoData);
-    updateQRState({ data: generateCryptoQR(newCryptoData) });
+    updateQRStateAndReset({ data: generateCryptoQR(newCryptoData) });
   };
 
   const handleSmsUpdate = (field: keyof typeof smsData, value: string) => {
     const newSmsData = { ...smsData, [field]: value };
     setSmsData(newSmsData);
-    updateQRState({ data: generateSMSQR(newSmsData) });
+    updateQRStateAndReset({ data: generateSMSQR(newSmsData) });
   };
 
   const handleWhatsAppUpdate = (
@@ -434,19 +449,19 @@ export default function QRGenerator() {
   ) => {
     const newWhatsAppData = { ...whatsappData, [field]: value };
     setWhatsappData(newWhatsAppData);
-    updateQRState({ data: generateWhatsAppQR(newWhatsAppData) });
+    updateQRStateAndReset({ data: generateWhatsAppQR(newWhatsAppData) });
   };
 
   const handleSkypeUpdate = (field: keyof typeof skypeData, value: string) => {
     const newSkypeData = { ...skypeData, [field]: value };
     setSkypeData(newSkypeData);
-    updateQRState({ data: generateSkypeQR(newSkypeData) });
+    updateQRStateAndReset({ data: generateSkypeQR(newSkypeData) });
   };
 
   const handleZoomUpdate = (field: keyof typeof zoomData, value: string) => {
     const newZoomData = { ...zoomData, [field]: value };
     setZoomData(newZoomData);
-    updateQRState({ data: generateZoomQR(newZoomData) });
+    updateQRStateAndReset({ data: generateZoomQR(newZoomData) });
   };
 
   const handlePayPalUpdate = (
@@ -455,79 +470,79 @@ export default function QRGenerator() {
   ) => {
     const newPayPalData = { ...paypalData, [field]: value };
     setPaypalData(newPayPalData);
-    updateQRState({ data: generatePayPalQR(newPayPalData) });
+    updateQRStateAndReset({ data: generatePayPalQR(newPayPalData) });
   };
 
   const updateFacebook = (updates: Partial<typeof facebookData>) => {
     const newData = { ...facebookData, ...updates };
     setFacebookData(newData);
     const url = newData.url || `https://facebook.com/${newData.username}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateTwitter = (updates: Partial<typeof twitterData>) => {
     const newData = { ...twitterData, ...updates };
     setTwitterData(newData);
     const url = newData.url || `https://twitter.com/${newData.username}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateInstagram = (updates: Partial<typeof instagramData>) => {
     const newData = { ...instagramData, ...updates };
     setInstagramData(newData);
     const url = newData.url || `https://instagram.com/${newData.username}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateLinkedIn = (updates: Partial<typeof linkedinData>) => {
     const newData = { ...linkedinData, ...updates };
     setLinkedinData(newData);
     const url = newData.url || `https://linkedin.com/in/${newData.username}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateTikTok = (updates: Partial<typeof tiktokData>) => {
     const newData = { ...tiktokData, ...updates };
     setTiktokData(newData);
     const url = newData.url || `https://tiktok.com/@${newData.username}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateYouTube = (updates: Partial<typeof youtubeData>) => {
     const newData = { ...youtubeData, ...updates };
     setYoutubeData(newData);
     const url = newData.url || `https://youtube.com/c/${newData.channel}`;
-    updateQRState({ data: url });
+    updateQRStateAndReset({ data: url });
   };
 
   const updateSMS = (updates: Partial<typeof smsData>) => {
     const newData = { ...smsData, ...updates };
     setSmsData(newData);
-    updateQRState({ data: generateSMSQR(newData) });
+    updateQRStateAndReset({ data: generateSMSQR(newData) });
   };
 
   const updateWhatsApp = (updates: Partial<typeof whatsappData>) => {
     const newData = { ...whatsappData, ...updates };
     setWhatsappData(newData);
-    updateQRState({ data: generateWhatsAppQR(newData) });
+    updateQRStateAndReset({ data: generateWhatsAppQR(newData) });
   };
 
   const updateSkype = (updates: Partial<typeof skypeData>) => {
     const newData = { ...skypeData, ...updates };
     setSkypeData(newData);
-    updateQRState({ data: generateSkypeQR(newData) });
+    updateQRStateAndReset({ data: generateSkypeQR(newData) });
   };
 
   const updateZoom = (updates: Partial<typeof zoomData>) => {
     const newData = { ...zoomData, ...updates };
     setZoomData(newData);
-    updateQRState({ data: generateZoomQR(newData) });
+    updateQRStateAndReset({ data: generateZoomQR(newData) });
   };
 
   const updatePayPal = (updates: Partial<typeof paypalData>) => {
     const newData = { ...paypalData, ...updates };
     setPaypalData(newData);
-    updateQRState({ data: generatePayPalQR(newData) });
+    updateQRStateAndReset({ data: generatePayPalQR(newData) });
   };
 
   const handleDownload = async (format: "png" | "jpg" | "svg") => {
@@ -550,7 +565,18 @@ export default function QRGenerator() {
 
   const handleRandomize = () => {
     randomizeQR();
+    setHasEverScanned(false); // Keep this one since randomizeQR is from the hook, not updateQRState
     toast.success("QR code randomized!");
+  };
+
+  const openDownloadModal = (format: "png" | "svg") => {
+    setDownloadFormat(format);
+    setShowDownloadModal(true);
+  };
+
+  const confirmDownload = () => {
+    handleDownload(downloadFormat);
+    setShowDownloadModal(false);
   };
 
   const handleSwapColors = () => {
@@ -560,7 +586,7 @@ export default function QRGenerator() {
         ? "#ffffff"
         : qrState.backgroundColor;
 
-    updateQRState({
+    updateQRStateAndReset({
       dotsColor: currentBackgroundColor,
       backgroundColor: currentDotsColor,
       cornersSquareColor: currentBackgroundColor,
@@ -572,7 +598,7 @@ export default function QRGenerator() {
     newForeground: string,
     newBackground: string
   ) => {
-    updateQRState({
+    updateQRStateAndReset({
       dotsColor: newForeground,
       backgroundColor: newBackground,
       cornersSquareColor: newForeground,
@@ -735,6 +761,7 @@ export default function QRGenerator() {
         const scanResult = await html5QrCode.scanFile(file, true);
         console.log("Real QR scan result:", scanResult);
         setScanResult(scanResult);
+        setHasEverScanned(true);
       } catch (scanError) {
         console.error("QR scan failed:", scanError);
 
@@ -819,21 +846,6 @@ export default function QRGenerator() {
               </div>
             </div>
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
-              {!scanResult.includes("could not be read") &&
-                !scanResult.includes("No QR data") &&
-                !scanResult.includes("Failed to scan") &&
-                !scanResult.includes("might be due to") && (
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(scanResult);
-                      toast.success("Copied to clipboard!");
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copy
-                  </button>
-                )}
               <button
                 onClick={() => setScanResult(null)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -933,21 +945,21 @@ export default function QRGenerator() {
 
             {/* Quick Actions */}
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-4 relative">
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      onClick={() => handleDownload("png")}
-                      disabled={isGenerating}
+                      onClick={() => openDownloadModal("png")}
+                      disabled={isGenerating || !hasEverScanned}
                       size="sm"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       PNG
                     </Button>
                     <Button
-                      onClick={() => handleDownload("svg")}
+                      onClick={() => openDownloadModal("svg")}
                       variant="outline"
-                      disabled={isGenerating}
+                      disabled={isGenerating || !hasEverScanned}
                       size="sm"
                     >
                       <Download className="w-4 h-4 mr-2" />
@@ -958,17 +970,18 @@ export default function QRGenerator() {
                     onClick={handleCopy}
                     variant="outline"
                     className="w-full"
-                    disabled={isGenerating}
+                    disabled={isGenerating || !hasEverScanned}
                     size="sm"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy to Clipboard
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      onClick={handleRandomize} 
+                    <Button
+                      onClick={handleRandomize}
                       variant="outline"
                       size="sm"
+                      disabled={isGenerating}
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Randomize
@@ -984,6 +997,26 @@ export default function QRGenerator() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Scan to Unlock Overlay */}
+                {!hasEverScanned && (
+                  <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Test your QR code by scanning it first to ensure it
+                        works properly before downloading or sharing.
+                      </p>
+                      <Button
+                        onClick={handleScanQR}
+                        disabled={isGenerating || isScanning}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Scan className="w-4 h-4 mr-2" />
+                        {isScanning ? "Scanning..." : "Scan QR Code"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1869,7 +1902,9 @@ export default function QRGenerator() {
                   <Textarea
                     id="qrData"
                     value={qrState.data}
-                    onChange={(e) => updateQRState({ data: e.target.value })}
+                    onChange={(e) =>
+                      updateQRStateAndReset({ data: e.target.value })
+                    }
                     placeholder={
                       dataType === "url"
                         ? "https://example.com"
@@ -1883,6 +1918,76 @@ export default function QRGenerator() {
                   />
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Error Correction Level */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality & Reliability</CardTitle>
+              <CardDescription>
+                Set error correction level - crucial for QR code scanning
+                reliability
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label htmlFor="errorCorrection">Error Correction Level</Label>
+                <Select
+                  value={qrState.errorCorrectionLevel}
+                  onValueChange={(value) =>
+                    updateQRStateAndReset({
+                      errorCorrectionLevel: value as any,
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="L">
+                      <div className="space-y-1">
+                        <div className="font-medium">Low (7%)</div>
+                        <div className="text-xs text-gray-500">
+                          Smallest size, minimal damage recovery
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="M">
+                      <div className="space-y-1">
+                        <div className="font-medium">Medium (15%)</div>
+                        <div className="text-xs text-gray-500">
+                          Balanced size and reliability
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Q">
+                      <div className="space-y-1">
+                        <div className="font-medium">
+                          Quartile (25%) - Recommended
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Good reliability for most uses
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="H">
+                      <div className="space-y-1">
+                        <div className="font-medium">High (30%)</div>
+                        <div className="text-xs text-gray-500">
+                          Maximum reliability, larger size
+                        </div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  Higher levels make QR codes more resistant to damage but
+                  increase size.
+                  <strong>Quartile (25%)</strong> is recommended for most
+                  applications.
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -1903,7 +2008,10 @@ export default function QRGenerator() {
                   <Button
                     key={preset.id}
                     variant="outline"
-                    onClick={() => applyEmojiPreset(preset)}
+                    onClick={() => {
+                      applyEmojiPreset(preset);
+                      setHasEverScanned(false);
+                    }}
                     className="h-8 w-8 p-0 text-center group hover:scale-110 transition-transform border-0"
                     title={`${preset.name} - ${preset.description}`}
                   >
@@ -1932,7 +2040,7 @@ export default function QRGenerator() {
                   id="withBackground"
                   checked={qrState.backgroundColor !== "transparent"}
                   onChange={(e) =>
-                    updateQRState({
+                    updateQRStateAndReset({
                       backgroundColor: e.target.checked
                         ? "#ffffff"
                         : "transparent",
@@ -1959,7 +2067,9 @@ export default function QRGenerator() {
                           : qrState.backgroundColor
                       }
                       onChange={(e) =>
-                        updateQRState({ backgroundColor: e.target.value })
+                        updateQRStateAndReset({
+                          backgroundColor: e.target.value,
+                        })
                       }
                       className="w-16 h-10 p-1 border rounded"
                       disabled={qrState.backgroundColor === "transparent"}
@@ -1971,7 +2081,9 @@ export default function QRGenerator() {
                           : qrState.backgroundColor
                       }
                       onChange={(e) =>
-                        updateQRState({ backgroundColor: e.target.value })
+                        updateQRStateAndReset({
+                          backgroundColor: e.target.value,
+                        })
                       }
                       placeholder="#ffffff"
                       className="flex-1"
@@ -1987,14 +2099,14 @@ export default function QRGenerator() {
                       type="color"
                       value={qrState.dotsColor}
                       onChange={(e) =>
-                        updateQRState({ dotsColor: e.target.value })
+                        updateQRStateAndReset({ dotsColor: e.target.value })
                       }
                       className="w-16 h-10 p-1 border rounded"
                     />
                     <Input
                       value={qrState.dotsColor}
                       onChange={(e) =>
-                        updateQRState({ dotsColor: e.target.value })
+                        updateQRStateAndReset({ dotsColor: e.target.value })
                       }
                       placeholder="#000000"
                       className="flex-1"
@@ -2011,14 +2123,18 @@ export default function QRGenerator() {
                       type="color"
                       value={qrState.cornersSquareColor}
                       onChange={(e) =>
-                        updateQRState({ cornersSquareColor: e.target.value })
+                        updateQRStateAndReset({
+                          cornersSquareColor: e.target.value,
+                        })
                       }
                       className="w-16 h-10 p-1 border rounded"
                     />
                     <Input
                       value={qrState.cornersSquareColor}
                       onChange={(e) =>
-                        updateQRState({ cornersSquareColor: e.target.value })
+                        updateQRStateAndReset({
+                          cornersSquareColor: e.target.value,
+                        })
                       }
                       placeholder="#000000"
                       className="flex-1"
@@ -2033,120 +2149,24 @@ export default function QRGenerator() {
                       type="color"
                       value={qrState.cornersDotColor}
                       onChange={(e) =>
-                        updateQRState({ cornersDotColor: e.target.value })
+                        updateQRStateAndReset({
+                          cornersDotColor: e.target.value,
+                        })
                       }
                       className="w-16 h-10 p-1 border rounded"
                     />
                     <Input
                       value={qrState.cornersDotColor}
                       onChange={(e) =>
-                        updateQRState({ cornersDotColor: e.target.value })
+                        updateQRStateAndReset({
+                          cornersDotColor: e.target.value,
+                        })
                       }
                       placeholder="#000000"
                       className="flex-1"
                     />
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Size & Quality */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Size & Quality</CardTitle>
-              <CardDescription>
-                Adjust the size, margins and error correction level
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Width (px): {qrState.width}</Label>
-                  <Slider
-                    value={[qrState.width]}
-                    onValueChange={([value]) => updateQRState({ width: value })}
-                    min={200}
-                    max={800}
-                    step={50}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label>Height (px): {qrState.height}</Label>
-                  <Slider
-                    value={[qrState.height]}
-                    onValueChange={([value]) =>
-                      updateQRState({ height: value })
-                    }
-                    min={200}
-                    max={800}
-                    step={50}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label>Border radius (px): {qrState.borderRadius}</Label>
-                  <Slider
-                    value={[qrState.borderRadius]}
-                    onValueChange={([value]) =>
-                      updateQRState({ borderRadius: value })
-                    }
-                    min={0}
-                    max={50}
-                    step={5}
-                    className="mt-2"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Margin (px): {qrState.margin}</Label>
-                  <Slider
-                    value={[qrState.margin]}
-                    onValueChange={([value]) =>
-                      updateQRState({ margin: value })
-                    }
-                    min={0}
-                    max={50}
-                    step={5}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label>Image margin (px): {qrState.logoMargin}</Label>
-                  <Slider
-                    value={[qrState.logoMargin]}
-                    onValueChange={([value]) =>
-                      updateQRState({ logoMargin: value })
-                    }
-                    min={0}
-                    max={20}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="errorCorrection">Error Correction Level</Label>
-                <Select
-                  value={qrState.errorCorrectionLevel}
-                  onValueChange={(value) =>
-                    updateQRState({ errorCorrectionLevel: value as any })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="L">Low (7%)</SelectItem>
-                    <SelectItem value="M">Medium (15%)</SelectItem>
-                    <SelectItem value="Q">Quartile (25%)</SelectItem>
-                    <SelectItem value="H">High (30%)</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </CardContent>
           </Card>
@@ -2183,7 +2203,9 @@ export default function QRGenerator() {
                           value={value}
                           checked={qrState.dotsType === value}
                           onChange={(e) =>
-                            updateQRState({ dotsType: e.target.value as any })
+                            updateQRStateAndReset({
+                              dotsType: e.target.value as any,
+                            })
                           }
                           className="w-4 h-4"
                         />
@@ -2217,7 +2239,7 @@ export default function QRGenerator() {
                           value={value}
                           checked={qrState.cornersSquareType === value}
                           onChange={(e) =>
-                            updateQRState({
+                            updateQRStateAndReset({
                               cornersSquareType: e.target.value as any,
                             })
                           }
@@ -2252,7 +2274,7 @@ export default function QRGenerator() {
                           value={value}
                           checked={qrState.cornersDotType === value}
                           onChange={(e) =>
-                            updateQRState({
+                            updateQRStateAndReset({
                               cornersDotType: e.target.value as any,
                             })
                           }
@@ -2290,7 +2312,7 @@ export default function QRGenerator() {
                   id="addFrame"
                   checked={qrState.hasFrame}
                   onChange={(e) =>
-                    updateQRState({ hasFrame: e.target.checked })
+                    updateQRStateAndReset({ hasFrame: e.target.checked })
                   }
                   className="w-4 h-4"
                 />
@@ -2311,14 +2333,18 @@ export default function QRGenerator() {
                           type="color"
                           value={qrState.frameColor}
                           onChange={(e) =>
-                            updateQRState({ frameColor: e.target.value })
+                            updateQRStateAndReset({
+                              frameColor: e.target.value,
+                            })
                           }
                           className="w-16 h-10 p-1 border rounded"
                         />
                         <Input
                           value={qrState.frameColor}
                           onChange={(e) =>
-                            updateQRState({ frameColor: e.target.value })
+                            updateQRStateAndReset({
+                              frameColor: e.target.value,
+                            })
                           }
                           placeholder="#000000"
                           className="flex-1"
@@ -2333,14 +2359,14 @@ export default function QRGenerator() {
                           type="color"
                           value={qrState.textColor}
                           onChange={(e) =>
-                            updateQRState({ textColor: e.target.value })
+                            updateQRStateAndReset({ textColor: e.target.value })
                           }
                           className="w-16 h-10 p-1 border rounded"
                         />
                         <Input
                           value={qrState.textColor}
                           onChange={(e) =>
-                            updateQRState({ textColor: e.target.value })
+                            updateQRStateAndReset({ textColor: e.target.value })
                           }
                           placeholder="#ffffff"
                           className="flex-1"
@@ -2370,7 +2396,7 @@ export default function QRGenerator() {
                             value={value}
                             checked={qrState.textPosition === value}
                             onChange={(e) =>
-                              updateQRState({
+                              updateQRStateAndReset({
                                 textPosition: e.target.value as any,
                               })
                             }
@@ -2394,7 +2420,7 @@ export default function QRGenerator() {
                       id="frameText"
                       value={qrState.frameText}
                       onChange={(e) =>
-                        updateQRState({ frameText: e.target.value })
+                        updateQRStateAndReset({ frameText: e.target.value })
                       }
                       placeholder="Scan for more info"
                     />
@@ -2429,7 +2455,9 @@ export default function QRGenerator() {
                           : qrState.logo || ""
                       }
                       onChange={(e) =>
-                        updateQRState({ logo: e.target.value || undefined })
+                        updateQRStateAndReset({
+                          logo: e.target.value || undefined,
+                        })
                       }
                       placeholder="🚀 or MyLogo or 🔥"
                       className="flex-1"
@@ -2469,27 +2497,43 @@ export default function QRGenerator() {
 
               {/* Logo size slider */}
               {qrState.logo && (
-                <div>
-                  <Label>
-                    Logo Size: {Math.round(qrState.logoSize * 100)}%
-                  </Label>
-                  <Slider
-                    value={[qrState.logoSize]}
-                    onValueChange={([value]) =>
-                      updateQRState({ logoSize: value })
-                    }
-                    min={0.1}
-                    max={0.8}
-                    step={0.1}
-                    className="mt-2"
-                  />
-                </div>
+                <>
+                  <div>
+                    <Label>
+                      Logo Size: {Math.round(qrState.logoSize * 100)}%
+                    </Label>
+                    <Slider
+                      value={[qrState.logoSize]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ logoSize: value })
+                      }
+                      min={0.1}
+                      max={0.8}
+                      step={0.1}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Logo Margin: {qrState.logoMargin}px</Label>
+                    <Slider
+                      value={[qrState.logoMargin]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ logoMargin: value })
+                      }
+                      min={0}
+                      max={20}
+                      step={1}
+                      className="mt-2"
+                    />
+                  </div>
+                </>
               )}
 
               {/* Remove logo button */}
               {qrState.logo && (
                 <Button
-                  onClick={() => updateQRState({ logo: undefined })}
+                  onClick={() => updateQRStateAndReset({ logo: undefined })}
                   variant="outline"
                   size="sm"
                   className="w-full"
@@ -2501,6 +2545,125 @@ export default function QRGenerator() {
           </Card>
         </div>
       </div>
+
+      {/* Download Options Modal */}
+      <Dialog open={showDownloadModal} onOpenChange={setShowDownloadModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Download QR Code</DialogTitle>
+            <DialogDescription>
+              Preview and customize your QR code before downloading
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Preview */}
+            <div className="flex justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="qr-code-container">
+                <QRWithFrame
+                  {...generateQROptions()}
+                  hasFrame={qrState.hasFrame}
+                  frameColor={qrState.frameColor}
+                  textColor={qrState.textColor}
+                  frameText={qrState.frameText}
+                  textPosition={qrState.textPosition}
+                  className="drop-shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* Size Options */}
+            <div className="space-y-3">
+              <div>
+                <Label>Size (Width × Height)</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div>
+                    <Slider
+                      value={[qrState.width]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ width: value })
+                      }
+                      min={200}
+                      max={800}
+                      step={50}
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Width: {qrState.width}px
+                    </div>
+                  </div>
+                  <div>
+                    <Slider
+                      value={[qrState.height]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ height: value })
+                      }
+                      min={200}
+                      max={800}
+                      step={50}
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Height: {qrState.height}px
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label>Margin</Label>
+                <Slider
+                  value={[qrState.margin]}
+                  onValueChange={([value]) =>
+                    updateQRStateAndReset({ margin: value })
+                  }
+                  min={0}
+                  max={50}
+                  step={5}
+                  className="mt-1"
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  Margin: {qrState.margin}px
+                </div>
+              </div>
+
+              <div>
+                <Label>Border Radius</Label>
+                <Slider
+                  value={[qrState.borderRadius]}
+                  onValueChange={([value]) =>
+                    updateQRStateAndReset({ borderRadius: value })
+                  }
+                  min={0}
+                  max={50}
+                  step={5}
+                  className="mt-1"
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  Border Radius: {qrState.borderRadius}px
+                </div>
+              </div>
+            </div>
+
+            {/* Download Button */}
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDownloadModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDownload}
+                className="flex-1"
+                disabled={isGenerating}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download {downloadFormat.toUpperCase()}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

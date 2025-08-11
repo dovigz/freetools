@@ -115,7 +115,7 @@ export default function RootLayout({
 
             {/* Logo positioned over sidebar area on desktop */}
             <Link
-              href="/all"
+              href="/"
               className="hidden md:flex fixed top-4 left-4 z-[60] items-center gap-2 select-none group transition-all duration-200"
             >
               <div className="flex items-center">

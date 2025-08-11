@@ -5,51 +5,51 @@ import QRCodeStyling, { type Options as QRCodeOptions } from "qr-code-styling";
  * =============================================================================
  * QR CODE CONTRAST & SCANNING OPTIMIZATION ALGORITHM
  * =============================================================================
- * 
+ *
  * This file contains emoji presets optimized for QR code scanning reliability.
  * All presets follow strict contrast ratio requirements to ensure maximum
  * scanning success across different devices, lighting conditions, and scanners.
- * 
+ *
  * CRITICAL QR CODE REQUIREMENTS:
- * 
+ *
  * 1. CONTRAST RATIOS (WCAG 2.1 Standards):
  *    - Minimum acceptable: 4.5:1 (AA standard)
  *    - Preferred target: 7:1+ (AAA standard)
  *    - Poor contrast: <3:1 (scanning failures likely)
  *    - Fair contrast: 3-4.5:1 (may have scanning issues)
- * 
+ *
  * 2. QR PATTERN ORIENTATION (CRITICAL):
  *    - QR codes MUST have DARK dots on LIGHT background
  *    - Inverted patterns (light on dark) will fail or be misread
  *    - Scanner algorithms expect specific pattern polarity
- * 
+ *
  * 3. COLOR RELATIONSHIPS:
  *    - dotsColor (foreground) MUST be darker than backgroundColor
- *    - cornersSquareColor MUST be darker than backgroundColor  
+ *    - cornersSquareColor MUST be darker than backgroundColor
  *    - cornersDotColor MUST be darker than backgroundColor
  *    - Use calculateContrastRatio() to validate combinations
- * 
+ *
  * 4. VALIDATION FUNCTIONS (from contrast-utils.ts):
  *    - calculateContrastRatio(color1, color2): Returns 1-21 ratio
  *    - getContrastLevel(ratio, fg, bg): Returns compliance level
  *    - isCorrectQRPattern(fg, bg): Validates proper orientation
  *    - suggestBetterColors(fg, bg): Provides improvement suggestions
- * 
+ *
  * AI TOOLS GUIDANCE:
  * When creating or modifying emoji presets, always:
  * - Run calculateContrastRatio(dotsColor, backgroundColor) >= 4.5
- * - Verify isCorrectQRPattern(dotsColor, backgroundColor) === true  
+ * - Verify isCorrectQRPattern(dotsColor, backgroundColor) === true
  * - Test all color combinations meet minimum standards
  * - Prioritize scanning reliability over pure aesthetics
  * - Maintain emoji-appropriate themes within contrast constraints
- * 
+ *
  * PRESET STRUCTURE:
  * Each preset contains:
  * - Visual theme matching the emoji
  * - Contrast-compliant color combinations
  * - Proper QR scanning orientation
  * - Accessible color relationships
- * 
+ *
  * =============================================================================
  */
 
@@ -57,7 +57,7 @@ import QRCodeStyling, { type Options as QRCodeOptions } from "qr-code-styling";
 export const downloadQRCode = async (
   qrInstance: QRCodeStyling | null,
   filename: string,
-  format: "png" | "jpg" | "svg" = "png"
+  format: "png" | "jpeg" | "svg" = "png"
 ) => {
   if (!qrInstance) return;
 
@@ -69,9 +69,15 @@ export const downloadQRCode = async (
         saveAs(blob, `${filename}.svg`);
       }
     } else {
-      const blob = await qrInstance.getRawData(format);
-      if (blob) {
-        saveAs(blob, `${filename}.${format}`);
+      const rawData = await qrInstance.getRawData(format);
+      if (rawData) {
+        const blob =
+          rawData instanceof Blob
+            ? rawData
+            : new Blob([rawData], {
+                type: format === "jpeg" ? "image/jpeg" : `image/${format}`,
+              });
+        saveAs(blob, `${filename}.${format === "jpeg" ? "jpg" : format}`);
       }
     }
   } catch (error) {
@@ -86,7 +92,13 @@ export const copyQRToClipboard = async (qrInstance: QRCodeStyling | null) => {
 
   try {
     if (navigator.clipboard && window.ClipboardItem) {
-      const blob = await qrInstance.getRawData("png");
+      const rawData = await qrInstance.getRawData("png");
+      let blob: Blob | null = null;
+      if (rawData instanceof Blob) {
+        blob = rawData;
+      } else if (rawData) {
+        blob = new Blob([rawData], { type: "image/png" });
+      }
       if (blob) {
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
@@ -1303,7 +1315,7 @@ export const emojiPresets: EmojiPreset[] = [
     description: "Magical sparkles",
     config: {
       dotsColor: "#b8860b", // Dark goldenrod (was #ffd700 - bright on dark)
-      cornersSquareColor: "#997a00", // Darker yellow (was #ffff00)  
+      cornersSquareColor: "#997a00", // Darker yellow (was #ffff00)
       cornersDotColor: "#665500", // Dark gold (was #daa520)
       backgroundColor: "#fffef0", // Light cream (was #191970 - INVERTED!)
       frameColor: "#4b0082",

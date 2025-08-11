@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, FileText, Link, AlertCircle, Check } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { validateJSON, parseJSON } from '@/lib/json-formatter';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { parseJSON, validateJSON } from "@/lib/json-formatter";
+import { AlertCircle, Check, FileText, Upload } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 interface JSONImportDialogProps {
   onImport: (data: any) => void;
@@ -19,14 +24,21 @@ interface JSONImportDialogProps {
   defaultTab?: "text" | "file";
 }
 
-export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpenChange, currentData, defaultTab = "text" }: JSONImportDialogProps) {
+export function JSONImportDialog({
+  onImport,
+  trigger,
+  open: externalOpen,
+  onOpenChange,
+  currentData,
+  defaultTab = "text",
+}: JSONImportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [jsonInput, setJsonInput] = useState('');
-  
+  const [jsonInput, setJsonInput] = useState("");
+
   // Use external open state if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
-  
+
   // Pre-populate with current data when dialog opens
   useEffect(() => {
     if (open && currentData) {
@@ -35,12 +47,15 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
       setValidationResult({ isValid: true });
     } else if (!open) {
       // Reset when dialog closes
-      setJsonInput('');
+      setJsonInput("");
       setValidationResult({ isValid: true });
     }
   }, [open, currentData]);
-  const [urlInput, setUrlInput] = useState('');
-  const [validationResult, setValidationResult] = useState<{ isValid: boolean; error?: string }>({ isValid: true });
+  const [urlInput, setUrlInput] = useState("");
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    error?: string;
+  }>({ isValid: true });
   const [loading, setLoading] = useState(false);
 
   const handleJsonChange = useCallback((value: string) => {
@@ -55,17 +70,17 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
         const parsed = parseJSON(jsonInput);
         onImport(parsed);
         setOpen(false);
-        setJsonInput('');
+        setJsonInput("");
         setValidationResult({ isValid: true });
       } catch (e) {
-        setValidationResult({ isValid: false, error: 'Failed to parse JSON' });
+        setValidationResult({ isValid: false, error: "Failed to parse JSON" });
       }
     }
-  }, [jsonInput, validationResult.isValid, onImport]);
+  }, [jsonInput, validationResult.isValid, onImport, setOpen]);
 
   const handleUrlImport = useCallback(async () => {
     if (!urlInput.trim()) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch(urlInput);
@@ -75,84 +90,95 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
       const data = await response.json();
       onImport(data);
       setOpen(false);
-      setUrlInput('');
+      setUrlInput("");
     } catch (e) {
-      setValidationResult({ 
-        isValid: false, 
-        error: `Failed to fetch from URL: ${e instanceof Error ? e.message : 'Unknown error'}` 
+      setValidationResult({
+        isValid: false,
+        error: `Failed to fetch from URL: ${e instanceof Error ? e.message : "Unknown error"}`,
       });
     } finally {
       setLoading(false);
     }
-  }, [urlInput, onImport]);
+  }, [urlInput, onImport, setOpen]);
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        handleJsonChange(content);
-      };
-      reader.readAsText(file);
-    }
-    // Reset input
-    event.target.value = '';
-  }, [handleJsonChange]);
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+          handleJsonChange(content);
+        };
+        reader.readAsText(file);
+      }
+      // Reset input
+      event.target.value = "";
+    },
+    [handleJsonChange]
+  );
 
   const examples = [
     {
-      name: 'Sample User',
-      json: JSON.stringify({
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "address": {
-          "street": "123 Main St",
-          "city": "New York",
-          "country": "USA"
+      name: "Sample User",
+      json: JSON.stringify(
+        {
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          address: {
+            street: "123 Main St",
+            city: "New York",
+            country: "USA",
+          },
+          preferences: {
+            theme: "dark",
+            notifications: true,
+          },
         },
-        "preferences": {
-          "theme": "dark",
-          "notifications": true
-        }
-      }, null, 2)
+        null,
+        2
+      ),
     },
     {
-      name: 'API Response',
-      json: JSON.stringify({
-        "status": "success",
-        "data": {
-          "users": [
-            {"id": 1, "name": "Alice"},
-            {"id": 2, "name": "Bob"}
-          ],
-          "pagination": {
-            "page": 1,
-            "total": 2,
-            "hasMore": false
-          }
-        }
-      }, null, 2)
-    }
+      name: "API Response",
+      json: JSON.stringify(
+        {
+          status: "success",
+          data: {
+            users: [
+              { id: 1, name: "Alice" },
+              { id: 2, name: "Bob" },
+            ],
+            pagination: {
+              page: 1,
+              total: 2,
+              hasMore: false,
+            },
+          },
+        },
+        null,
+        2
+      ),
+    },
   ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && (
-        <DialogTrigger asChild>
-          {trigger}
-        </DialogTrigger>
-      )}
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       {!trigger && externalOpen === undefined && (
         <DialogTrigger asChild>
-          <Button size="sm" variant="outline" className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+          >
             <Upload className="w-4 h-4 mr-2" />
             Import JSON
           </Button>
         </DialogTrigger>
       )}
-      
+
       <DialogContent className="max-w-2xl max-h-[80vh] bg-slate-800 border-slate-600">
         <DialogHeader>
           <DialogTitle className="text-white">Import JSON</DialogTitle>
@@ -160,15 +186,15 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
 
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-700 border border-slate-600">
-            <TabsTrigger 
-              value="text" 
+            <TabsTrigger
+              value="text"
               className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-600 hover:text-white transition-colors"
             >
               <FileText className="w-4 h-4 mr-2" />
               Text
             </TabsTrigger>
-            <TabsTrigger 
-              value="file" 
+            <TabsTrigger
+              value="file"
               className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-600 hover:text-white transition-colors"
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -178,7 +204,9 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
 
           <TabsContent value="text" className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Paste JSON</label>
+              <label className="text-sm font-medium text-slate-300">
+                Paste JSON
+              </label>
               <Textarea
                 value={jsonInput}
                 onChange={(e) => handleJsonChange(e.target.value)}
@@ -212,7 +240,7 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleImportJson}
                 disabled={!validationResult.isValid || !jsonInput.trim()}
                 className="bg-blue-600 hover:bg-blue-700"
@@ -225,13 +253,15 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
 
           <TabsContent value="file" className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Upload JSON File</label>
-              <div 
+              <label className="text-sm font-medium text-slate-300">
+                Upload JSON File
+              </label>
+              <div
                 className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-slate-500 transition-colors"
                 onDrop={(e) => {
                   e.preventDefault();
                   const file = e.dataTransfer.files[0];
-                  if (file && file.type === 'application/json') {
+                  if (file && file.type === "application/json") {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                       const content = event.target?.result as string;
@@ -244,7 +274,9 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
                 onDragEnter={(e) => e.preventDefault()}
               >
                 <Upload className="w-8 h-8 text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-400 mb-4">Drop your JSON file here or click to browse</p>
+                <p className="text-slate-400 mb-4">
+                  Drop your JSON file here or click to browse
+                </p>
                 <input
                   type="file"
                   accept=".json,application/json"
@@ -263,21 +295,25 @@ export function JSONImportDialog({ onImport, trigger, open: externalOpen, onOpen
 
             {jsonInput && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Preview</label>
+                <label className="text-sm font-medium text-slate-300">
+                  Preview
+                </label>
                 <Textarea
                   value={jsonInput}
                   readOnly
                   className="min-h-[100px] bg-slate-700 border-slate-600 text-white font-mono text-sm"
                 />
-                
+
                 {!validationResult.isValid && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{validationResult.error}</AlertDescription>
+                    <AlertDescription>
+                      {validationResult.error}
+                    </AlertDescription>
                   </Alert>
                 )}
 
-                <Button 
+                <Button
                   onClick={handleImportJson}
                   disabled={!validationResult.isValid}
                   className="bg-blue-600 hover:bg-blue-700 w-full"

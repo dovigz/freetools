@@ -22,7 +22,7 @@ const MAX_RECENT = 20;
 
 function useLocalStorageArray(key: string, maxItems: number = 20) {
   const getStoredArray = (): string[] => {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(key);
       return stored ? JSON.parse(stored) : [];
@@ -33,14 +33,17 @@ function useLocalStorageArray(key: string, maxItems: number = 20) {
 
   const addItem = (item: string) => {
     const current = getStoredArray();
-    const updated = [item, ...current.filter(i => i !== item)].slice(0, maxItems);
+    const updated = [item, ...current.filter((i) => i !== item)].slice(
+      0,
+      maxItems
+    );
     localStorage.setItem(key, JSON.stringify(updated));
     return updated;
   };
 
   const removeItem = (item: string) => {
     const current = getStoredArray();
-    const updated = current.filter(i => i !== item);
+    const updated = current.filter((i) => i !== item);
     localStorage.setItem(key, JSON.stringify(updated));
     return updated;
   };
@@ -52,8 +55,11 @@ export default function EmojiCopy() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [updateTrigger, setUpdateTrigger] = useState(0);
-  
-  const recentEmojisStorage = useLocalStorageArray(RECENT_EMOJIS_KEY, MAX_RECENT);
+
+  const recentEmojisStorage = useLocalStorageArray(
+    RECENT_EMOJIS_KEY,
+    MAX_RECENT
+  );
   const recentEmojis = recentEmojisStorage.getStoredArray();
 
   const allEmojis = useMemo(() => {
@@ -85,18 +91,6 @@ export default function EmojiCopy() {
         });
       }
     });
-
-    console.log(`Total emojis loaded: ${emojiList.length}`);
-    console.log(
-      "Heart emojis:",
-      emojiList
-        .filter(
-          (e) =>
-            e.name.toLowerCase().includes("heart") ||
-            e.keywords.some((k) => k.toLowerCase().includes("heart"))
-        )
-        .map((e) => `${e.emoji} ${e.name}`)
-    );
 
     return emojiList;
   }, []);
@@ -132,7 +126,7 @@ export default function EmojiCopy() {
       .writeText(emoji)
       .then(() => {
         recentEmojisStorage.addItem(emoji);
-        setUpdateTrigger(prev => prev + 1); // Force re-render
+        setUpdateTrigger((prev) => prev + 1); // Force re-render
       })
       .catch(() => {
         toast.error("Failed to copy emoji");
@@ -141,7 +135,7 @@ export default function EmojiCopy() {
 
   const removeFromRecent = (emojiToRemove: string) => {
     recentEmojisStorage.removeItem(emojiToRemove);
-    setUpdateTrigger(prev => prev + 1); // Force re-render
+    setUpdateTrigger((prev) => prev + 1); // Force re-render
   };
 
   return (

@@ -1,7 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   calculateContrastRatio,
   getContrastLevel,
@@ -37,25 +44,27 @@ export function SimpleContrastIndicator({
     foregroundColor,
     backgroundColor
   );
-  const suggestions = suggestBetterColors(
-    foregroundColor,
-    backgroundColor,
-    contrastRatio
-  );
+  const suggestions = suggestBetterColors(foregroundColor, backgroundColor);
 
   const getIcon = () => {
     if (contrastLevel.isInverted) return <XCircle className="w-4 h-4" />;
-    if (contrastLevel.level === "aaa") return <CheckCircle className="w-4 h-4" />;
-    if (contrastLevel.level === "aa") return <CheckCircle className="w-4 h-4" />;
-    if (contrastLevel.level === "poor") return <AlertTriangle className="w-4 h-4" />;
+    if (contrastLevel.level === "aaa")
+      return <CheckCircle className="w-4 h-4" />;
+    if (contrastLevel.level === "aa")
+      return <CheckCircle className="w-4 h-4" />;
+    if (contrastLevel.level === "fail")
+      return <AlertTriangle className="w-4 h-4" />;
     return <Info className="w-4 h-4" />;
   };
 
   const getTextColor = () => {
     if (contrastLevel.isInverted) return "text-red-600 dark:text-red-400";
-    if (contrastLevel.level === "aaa") return "text-green-600 dark:text-green-400";
-    if (contrastLevel.level === "aa") return "text-green-600 dark:text-green-400";
-    if (contrastLevel.level === "poor") return "text-orange-600 dark:text-orange-400";
+    if (contrastLevel.level === "aaa")
+      return "text-green-600 dark:text-green-400";
+    if (contrastLevel.level === "aa")
+      return "text-green-600 dark:text-green-400";
+    if (contrastLevel.level === "fail")
+      return "text-orange-600 dark:text-orange-400";
     return "text-blue-600 dark:text-blue-400";
   };
 
@@ -63,7 +72,7 @@ export function SimpleContrastIndicator({
     if (contrastLevel.isInverted) return "bg-red-500";
     if (contrastLevel.level === "aaa") return "bg-green-500";
     if (contrastLevel.level === "aa") return "bg-green-500";
-    if (contrastLevel.level === "poor") return "bg-orange-500";
+    if (contrastLevel.level === "fail") return "bg-orange-500";
     return "bg-blue-500";
   };
 
@@ -85,7 +94,8 @@ export function SimpleContrastIndicator({
                 ❌ Inverted Colors Detected!
               </p>
               <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-                QR scanners expect dark dots on light backgrounds. This will likely fail to scan.
+                QR scanners expect dark dots on light backgrounds. This will
+                likely fail to scan.
               </p>
               {onSwapColors && (
                 <Button
@@ -125,10 +135,10 @@ export function SimpleContrastIndicator({
                   Contrast Analysis
                 </DialogTitle>
                 <DialogDescription>
-                  Understanding your QR code's contrast and readability
+                  Understanding your QR code&apos;s contrast and readability
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 {/* Detailed Progress Bar with markers */}
                 <div className="relative">
@@ -149,11 +159,19 @@ export function SimpleContrastIndicator({
 
                 {/* Status Message */}
                 <div className={`text-sm ${getTextColor()}`}>
-                  <p className="font-medium mb-1">{contrastLevel.description}</p>
+                  <p className="font-medium mb-1">
+                    {contrastLevel.description}
+                  </p>
                   {contrastLevel.meetsMinimum ? (
-                    <p>✅ Your QR code meets minimum contrast requirements and should scan well.</p>
+                    <p>
+                      ✅ Your QR code meets minimum contrast requirements and
+                      should scan well.
+                    </p>
                   ) : (
-                    <p>⚠️ Your QR code may be difficult to scan due to low contrast.</p>
+                    <p>
+                      ⚠️ Your QR code may be difficult to scan due to low
+                      contrast.
+                    </p>
                   )}
                 </div>
 
@@ -176,9 +194,16 @@ export function SimpleContrastIndicator({
 
                 {/* Technical Details */}
                 <div className="text-xs text-gray-500 space-y-1 border-t pt-3">
-                  <p><strong>Technical Details:</strong></p>
+                  <p>
+                    <strong>Technical Details:</strong>
+                  </p>
                   <p>• Foreground (QR dots): {foregroundColor}</p>
-                  <p>• Background: {backgroundColor === "transparent" ? "transparent (treated as white)" : backgroundColor}</p>
+                  <p>
+                    • Background:{" "}
+                    {backgroundColor === "transparent"
+                      ? "transparent (treated as white)"
+                      : backgroundColor}
+                  </p>
                   <p>• Minimum ratio for normal text: 4.5:1</p>
                   <p>• Enhanced contrast (AAA): 7:1</p>
                 </div>

@@ -195,13 +195,15 @@ export const StyledQRCode = forwardRef<StyledQRCodeRef, StyledQRCodeProps>(
       cornersDotOptions,
       qrOptions,
       onQRCodeReady,
+      createTextImage,
     ]);
 
     // Cleanup on unmount
     useEffect(() => {
       return () => {
-        if (qrRef.current) {
-          qrRef.current.innerHTML = "";
+        const currentRef = qrRef.current;
+        if (currentRef) {
+          currentRef.innerHTML = "";
         }
       };
     }, []);
@@ -224,5 +226,7 @@ export const StyledQRCode = forwardRef<StyledQRCodeRef, StyledQRCodeProps>(
     );
   }
 );
+
+StyledQRCode.displayName = "StyledQRCode";
 
 export default StyledQRCode;

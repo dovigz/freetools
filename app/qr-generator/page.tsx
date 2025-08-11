@@ -57,7 +57,7 @@ import { InteractiveContrastSlider } from "@/components/qr/InteractiveContrastSl
 import QRWithFrame from "@/components/qr/QRWithFrame";
 import { type StyledQRCodeRef } from "@/components/qr/StyledQRCode";
 import { useQRGenerator } from "@/hooks/use-qr-generator";
-import { emojiPresets, generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
+import { generateVCardQR, generateWiFiQR } from "@/lib/qr-utils";
 
 // Crypto QR code generator
 const generateCryptoQR = (crypto: {
@@ -163,7 +163,7 @@ export default function QRGenerator() {
     copyToClipboard,
     setQRInstance,
     isGenerating,
-    presets,
+    emojiPresets,
   } = useQRGenerator();
 
   const [dataType, setDataType] = useState<
@@ -186,10 +186,14 @@ export default function QRGenerator() {
     | "tiktok"
     | "youtube"
   >("url");
-  const [wifiData, setWifiData] = useState({
+  const [wifiData, setWifiData] = useState<{
+    ssid: string;
+    password: string;
+    security: "WPA" | "WEP" | "nopass";
+  }>({
     ssid: "",
     password: "",
-    security: "WPA" as const,
+    security: "WPA",
   });
   const [vcardData, setVcardData] = useState({
     firstName: "",
@@ -544,7 +548,7 @@ export default function QRGenerator() {
     updateQRStateAndReset({ data: generatePayPalQR(newData) });
   };
 
-  const handleDownload = async (format: "png" | "jpg" | "svg") => {
+  const handleDownload = async (format: "png" | "jpeg" | "svg") => {
     try {
       await downloadQR(format);
       toast.success(`QR code downloaded as ${format.toUpperCase()}`);
@@ -629,7 +633,7 @@ export default function QRGenerator() {
       let qrCanvas = qrCodeContainer.querySelector("canvas");
       let qrImage = qrCodeContainer.querySelector("img");
 
-      let imageElement = null;
+      let imageElement: HTMLImageElement | null = null;
 
       if (qrCanvas) {
         console.log("Found canvas, converting to image...");
@@ -638,7 +642,9 @@ export default function QRGenerator() {
         imageElement = new Image();
         imageElement.src = dataURL;
         await new Promise((resolve) => {
-          imageElement.onload = resolve;
+          if (imageElement) {
+            imageElement.onload = resolve;
+          }
         });
       } else if (qrSvg) {
         console.log("Found SVG, converting to image...");

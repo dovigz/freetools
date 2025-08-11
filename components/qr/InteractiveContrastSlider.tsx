@@ -24,8 +24,7 @@ export function InteractiveContrastSlider({
   onSwapColors,
   className = "",
 }: InteractiveContrastSliderProps) {
-  const bgColor =
-    backgroundColor === "transparent" ? "#ffffff" : backgroundColor;
+  const bgColor = backgroundColor;
   const currentRatio = calculateContrastRatio(foregroundColor, bgColor);
   const contrastLevel = getContrastLevel(
     currentRatio,
@@ -223,10 +222,7 @@ export function InteractiveContrastSlider({
             <span className="font-mono">Dots: {foregroundColor}</span>
             {" • "}
             <span className="font-mono">
-              Background:{" "}
-              {backgroundColor === "transparent"
-                ? "transparent"
-                : backgroundColor}
+              Background: {backgroundColor}
             </span>
           </p>
           <p className="text-gray-400">

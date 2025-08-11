@@ -581,10 +581,7 @@ export default function QRGenerator() {
 
   const handleSwapColors = () => {
     const currentDotsColor = qrState.dotsColor;
-    const currentBackgroundColor =
-      qrState.backgroundColor === "transparent"
-        ? "#ffffff"
-        : qrState.backgroundColor;
+    const currentBackgroundColor = qrState.backgroundColor;
 
     updateQRStateAndReset({
       dotsColor: currentBackgroundColor,
@@ -2033,26 +2030,6 @@ export default function QRGenerator() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Background Toggle */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="withBackground"
-                  checked={qrState.backgroundColor !== "transparent"}
-                  onChange={(e) =>
-                    updateQRStateAndReset({
-                      backgroundColor: e.target.checked
-                        ? "#ffffff"
-                        : "transparent",
-                    })
-                  }
-                  className="w-4 h-4"
-                />
-                <Label htmlFor="withBackground" className="text-sm font-medium">
-                  With background ✓
-                </Label>
-              </div>
-
               {/* Color Controls */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -2061,25 +2038,16 @@ export default function QRGenerator() {
                     <Input
                       id="backgroundColor"
                       type="color"
-                      value={
-                        qrState.backgroundColor === "transparent"
-                          ? "#ffffff"
-                          : qrState.backgroundColor
-                      }
+                      value={qrState.backgroundColor}
                       onChange={(e) =>
                         updateQRStateAndReset({
                           backgroundColor: e.target.value,
                         })
                       }
                       className="w-16 h-10 p-1 border rounded"
-                      disabled={qrState.backgroundColor === "transparent"}
                     />
                     <Input
-                      value={
-                        qrState.backgroundColor === "transparent"
-                          ? "#ffffff"
-                          : qrState.backgroundColor
-                      }
+                      value={qrState.backgroundColor}
                       onChange={(e) =>
                         updateQRStateAndReset({
                           backgroundColor: e.target.value,
@@ -2087,7 +2055,6 @@ export default function QRGenerator() {
                       }
                       placeholder="#ffffff"
                       className="flex-1"
-                      disabled={qrState.backgroundColor === "transparent"}
                     />
                   </div>
                 </div>

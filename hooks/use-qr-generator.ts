@@ -40,7 +40,7 @@ const initialState: QRCodeState = {
   cornersSquareType: 'extra-rounded',
   cornersDotColor: '#000000',
   cornersDotType: 'dot',
-  backgroundColor: 'transparent',
+  backgroundColor: '#ffffff',
   logoSize: 0.4,
   logoMargin: 0,
   // Frame settings
@@ -140,7 +140,7 @@ export const useQRGenerator = () => {
     const dotsColor = generateRandomColor()
     const cornersSquareColor = generateRandomColor()
     const cornersDotColor = generateRandomColor()
-    const backgroundColor = Math.random() > 0.5 ? generateRandomColor() : 'transparent'
+    const backgroundColor = Math.random() > 0.5 ? generateRandomColor() : '#ffffff'
     const shapes = generateRandomShapes()
     
     updateQRState({

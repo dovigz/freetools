@@ -2161,6 +2161,64 @@ export default function QRGenerator() {
                 </>
               )}
 
+              {/* Error Correction Level */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-2 block">Error Correction Level</Label>
+                <Select
+                  value={qrState.errorCorrectionLevel}
+                  onValueChange={(value) =>
+                    updateQRStateAndReset({
+                      errorCorrectionLevel: value as any,
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue>
+                      {qrState.errorCorrectionLevel === "L" && "Low (7%)"}
+                      {qrState.errorCorrectionLevel === "M" && "Medium (15%)"}
+                      {qrState.errorCorrectionLevel === "Q" && "Quartile (25%) - Recommended"}
+                      {qrState.errorCorrectionLevel === "H" && "High (30%)"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="L">
+                      <div className="space-y-1">
+                        <div className="font-medium">Low (7%)</div>
+                        <div className="text-xs text-gray-500">
+                          Smallest size, minimal damage recovery
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="M">
+                      <div className="space-y-1">
+                        <div className="font-medium">Medium (15%)</div>
+                        <div className="text-xs text-gray-500">
+                          Balanced size and reliability
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Q">
+                      <div className="space-y-1">
+                        <div className="font-medium">
+                          Quartile (25%) - Recommended
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Good balance, recommended for most use cases
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="H">
+                      <div className="space-y-1">
+                        <div className="font-medium">High (30%)</div>
+                        <div className="text-xs text-gray-500">
+                          Maximum reliability, larger size
+                        </div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Background & Colors */}
               <div className="border-t pt-4">
                 <Label className="text-sm font-medium mb-3 block">

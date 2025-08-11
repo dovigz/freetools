@@ -871,15 +871,6 @@ export default function QRGenerator() {
         }
       `}</style>
 
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-          QR Code Generator
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Create customizable QR codes with advanced styling options
-        </p>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Panel - QR Preview */}
         <div className="lg:col-span-1 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -1926,115 +1917,6 @@ export default function QRGenerator() {
             </CardContent>
           </Card>
 
-          {/* Logo Size Percentage */}
-          {qrState.logo && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Logo Size</CardTitle>
-                <CardDescription>
-                  Adjust the size of your logo or emoji
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <Label htmlFor="logoSizePercent">Logo Visibility</Label>
-                  <Select
-                    value={Math.round(qrState.logoSize * 100).toString()}
-                    onValueChange={(value) =>
-                      updateQRStateAndReset({ logoSize: parseInt(value) / 100 })
-                    }
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue>
-                        {Math.round(qrState.logoSize * 100)}%
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10%</SelectItem>
-                      <SelectItem value="20">20%</SelectItem>
-                      <SelectItem value="30">30%</SelectItem>
-                      <SelectItem value="40">40%</SelectItem>
-                      <SelectItem value="50">50%</SelectItem>
-                      <SelectItem value="60">60%</SelectItem>
-                      <SelectItem value="70">70%</SelectItem>
-                      <SelectItem value="80">80%</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Error Correction Level */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quality & Reliability</CardTitle>
-              <CardDescription>
-                Set error correction level - crucial for QR code scanning
-                reliability
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="errorCorrection">Error Correction Level</Label>
-                <Select
-                  value={qrState.errorCorrectionLevel}
-                  onValueChange={(value) =>
-                    updateQRStateAndReset({
-                      errorCorrectionLevel: value as any,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="L">
-                      <div className="space-y-1">
-                        <div className="font-medium">Low (7%)</div>
-                        <div className="text-xs text-gray-500">
-                          Smallest size, minimal damage recovery
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="M">
-                      <div className="space-y-1">
-                        <div className="font-medium">Medium (15%)</div>
-                        <div className="text-xs text-gray-500">
-                          Balanced size and reliability
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Q">
-                      <div className="space-y-1">
-                        <div className="font-medium">
-                          Quartile (25%) - Recommended
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Good reliability for most uses
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="H">
-                      <div className="space-y-1">
-                        <div className="font-medium">High (30%)</div>
-                        <div className="text-xs text-gray-500">
-                          Maximum reliability, larger size
-                        </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                  Higher levels make QR codes more resistant to damage but
-                  increase size.
-                  <strong>Quartile (25%)</strong> is recommended for most
-                  applications.
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Emoji Style Presets */}
           <Card>
             <CardHeader>
@@ -2163,7 +2045,9 @@ export default function QRGenerator() {
 
               {/* Error Correction Level */}
               <div className="border-t pt-4">
-                <Label className="text-sm font-medium mb-2 block">Error Correction Level</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Error Correction Level
+                </Label>
                 <Select
                   value={qrState.errorCorrectionLevel}
                   onValueChange={(value) =>
@@ -2176,7 +2060,8 @@ export default function QRGenerator() {
                     <SelectValue>
                       {qrState.errorCorrectionLevel === "L" && "Low (7%)"}
                       {qrState.errorCorrectionLevel === "M" && "Medium (15%)"}
-                      {qrState.errorCorrectionLevel === "Q" && "Quartile (25%) - Recommended"}
+                      {qrState.errorCorrectionLevel === "Q" &&
+                        "Quartile (25%) - Recommended"}
                       {qrState.errorCorrectionLevel === "H" && "High (30%)"}
                     </SelectValue>
                   </SelectTrigger>
@@ -2224,7 +2109,8 @@ export default function QRGenerator() {
                 <Label className="text-sm font-medium mb-3 block">
                   Background & Colors
                 </Label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  {/* Background Color */}
                   <div>
                     <Label htmlFor="backgroundColor" className="text-xs">
                       Background color
@@ -2253,169 +2139,154 @@ export default function QRGenerator() {
                       />
                     </div>
                   </div>
+
+                  {/* Dots Color & Type */}
                   <div>
                     <Label htmlFor="dotsColor" className="text-xs">
-                      Dots color
+                      Dots color & type
                     </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="dotsColor"
-                        type="color"
-                        value={qrState.dotsColor}
-                        onChange={(e) =>
-                          updateQRStateAndReset({ dotsColor: e.target.value })
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex gap-2">
+                        <Input
+                          id="dotsColor"
+                          type="color"
+                          value={qrState.dotsColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({ dotsColor: e.target.value })
+                          }
+                          className="w-12 h-8 p-1 border rounded"
+                        />
+                        <Input
+                          value={qrState.dotsColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({ dotsColor: e.target.value })
+                          }
+                          placeholder="#000000"
+                          className="flex-1 text-xs"
+                        />
+                      </div>
+                      <Select
+                        value={qrState.dotsType}
+                        onValueChange={(value) =>
+                          updateQRStateAndReset({ dotsType: value as any })
                         }
-                        className="w-12 h-8 p-1 border rounded"
-                      />
-                      <Input
-                        value={qrState.dotsColor}
-                        onChange={(e) =>
-                          updateQRStateAndReset({ dotsColor: e.target.value })
-                        }
-                        placeholder="#000000"
-                        className="flex-1 text-xs"
-                      />
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dots">dots</SelectItem>
+                          <SelectItem value="rounded">rounded</SelectItem>
+                          <SelectItem value="classy">classy</SelectItem>
+                          <SelectItem value="classy-rounded">
+                            classy-rounded
+                          </SelectItem>
+                          <SelectItem value="square">square</SelectItem>
+                          <SelectItem value="extra-rounded">
+                            extra-rounded
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+
+                  {/* Corner Square Color & Type */}
                   <div>
                     <Label htmlFor="cornersSquareColor" className="text-xs">
-                      Corners Square
+                      Corner Square color & type
                     </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="cornersSquareColor"
-                        type="color"
-                        value={qrState.cornersSquareColor}
-                        onChange={(e) =>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex gap-2">
+                        <Input
+                          id="cornersSquareColor"
+                          type="color"
+                          value={qrState.cornersSquareColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({
+                              cornersSquareColor: e.target.value,
+                            })
+                          }
+                          className="w-12 h-8 p-1 border rounded"
+                        />
+                        <Input
+                          value={qrState.cornersSquareColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({
+                              cornersSquareColor: e.target.value,
+                            })
+                          }
+                          placeholder="#000000"
+                          className="flex-1 text-xs"
+                        />
+                      </div>
+                      <Select
+                        value={qrState.cornersSquareType}
+                        onValueChange={(value) =>
                           updateQRStateAndReset({
-                            cornersSquareColor: e.target.value,
+                            cornersSquareType: value as any,
                           })
                         }
-                        className="w-12 h-8 p-1 border rounded"
-                      />
-                      <Input
-                        value={qrState.cornersSquareColor}
-                        onChange={(e) =>
-                          updateQRStateAndReset({
-                            cornersSquareColor: e.target.value,
-                          })
-                        }
-                        placeholder="#000000"
-                        className="flex-1 text-xs"
-                      />
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dot">dot</SelectItem>
+                          <SelectItem value="square">square</SelectItem>
+                          <SelectItem value="extra-rounded">
+                            extra-rounded
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+
+                  {/* Corner Dot Color & Type */}
                   <div>
                     <Label htmlFor="cornersDotColor" className="text-xs">
-                      Corners Dot
+                      Corner Dot color & type
                     </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="cornersDotColor"
-                        type="color"
-                        value={qrState.cornersDotColor}
-                        onChange={(e) =>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex gap-2">
+                        <Input
+                          id="cornersDotColor"
+                          type="color"
+                          value={qrState.cornersDotColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({
+                              cornersDotColor: e.target.value,
+                            })
+                          }
+                          className="w-12 h-8 p-1 border rounded"
+                        />
+                        <Input
+                          value={qrState.cornersDotColor}
+                          onChange={(e) =>
+                            updateQRStateAndReset({
+                              cornersDotColor: e.target.value,
+                            })
+                          }
+                          placeholder="#000000"
+                          className="flex-1 text-xs"
+                        />
+                      </div>
+                      <Select
+                        value={qrState.cornersDotType}
+                        onValueChange={(value) =>
                           updateQRStateAndReset({
-                            cornersDotColor: e.target.value,
+                            cornersDotType: value as any,
                           })
                         }
-                        className="w-12 h-8 p-1 border rounded"
-                      />
-                      <Input
-                        value={qrState.cornersDotColor}
-                        onChange={(e) =>
-                          updateQRStateAndReset({
-                            cornersDotColor: e.target.value,
-                          })
-                        }
-                        placeholder="#000000"
-                        className="flex-1 text-xs"
-                      />
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dot">dot</SelectItem>
+                          <SelectItem value="square">square</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shape Options */}
-              <div className="border-t pt-4">
-                <Label className="text-sm font-medium mb-3 block">
-                  Shape Options
-                </Label>
-                <div className="grid grid-cols-3 gap-4">
-                  {/* Dots type */}
-                  <div>
-                    <Label className="text-xs font-medium mb-2 block">
-                      Dots type
-                    </Label>
-                    <Select
-                      value={qrState.dotsType}
-                      onValueChange={(value) =>
-                        updateQRStateAndReset({ dotsType: value as any })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dots">dots</SelectItem>
-                        <SelectItem value="rounded">rounded</SelectItem>
-                        <SelectItem value="classy">classy</SelectItem>
-                        <SelectItem value="classy-rounded">
-                          classy-rounded
-                        </SelectItem>
-                        <SelectItem value="square">square</SelectItem>
-                        <SelectItem value="extra-rounded">
-                          extra-rounded
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Corners Square type */}
-                  <div>
-                    <Label className="text-xs font-medium mb-2 block">
-                      Corner Square
-                    </Label>
-                    <Select
-                      value={qrState.cornersSquareType}
-                      onValueChange={(value) =>
-                        updateQRStateAndReset({
-                          cornersSquareType: value as any,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dot">dot</SelectItem>
-                        <SelectItem value="square">square</SelectItem>
-                        <SelectItem value="extra-rounded">
-                          extra-rounded
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Corners Dot type */}
-                  <div>
-                    <Label className="text-xs font-medium mb-2 block">
-                      Corner Dot
-                    </Label>
-                    <Select
-                      value={qrState.cornersDotType}
-                      onValueChange={(value) =>
-                        updateQRStateAndReset({ cornersDotType: value as any })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dot">dot</SelectItem>
-                        <SelectItem value="square">square</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </div>

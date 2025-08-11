@@ -65,7 +65,9 @@ export const downloadQRCode = async (
     if (format === "svg") {
       const svgString = await qrInstance.getRawData("svg");
       if (svgString) {
-        const blob = new Blob([svgString], { type: "image/svg+xml" });
+        const blob = new Blob([svgString as unknown as string], {
+          type: "image/svg+xml",
+        });
         saveAs(blob, `${filename}.svg`);
       }
     } else {
@@ -74,7 +76,7 @@ export const downloadQRCode = async (
         const blob =
           rawData instanceof Blob
             ? rawData
-            : new Blob([rawData], {
+            : new Blob([rawData as unknown as ArrayBuffer], {
                 type: format === "jpeg" ? "image/jpeg" : `image/${format}`,
               });
         saveAs(blob, `${filename}.${format === "jpeg" ? "jpg" : format}`);
@@ -97,7 +99,9 @@ export const copyQRToClipboard = async (qrInstance: QRCodeStyling | null) => {
       if (rawData instanceof Blob) {
         blob = rawData;
       } else if (rawData) {
-        blob = new Blob([rawData], { type: "image/png" });
+        blob = new Blob([rawData as unknown as ArrayBuffer], {
+          type: "image/png",
+        });
       }
       if (blob) {
         await navigator.clipboard.write([

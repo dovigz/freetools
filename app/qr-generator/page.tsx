@@ -1926,6 +1926,45 @@ export default function QRGenerator() {
             </CardContent>
           </Card>
 
+          {/* Logo Size Percentage */}
+          {qrState.logo && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Logo Size</CardTitle>
+                <CardDescription>
+                  Adjust the size of your logo or emoji
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="logoSizePercent">Logo Visibility</Label>
+                  <Select
+                    value={Math.round(qrState.logoSize * 100).toString()}
+                    onValueChange={(value) =>
+                      updateQRStateAndReset({ logoSize: parseInt(value) / 100 })
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue>
+                        {Math.round(qrState.logoSize * 100)}%
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10%</SelectItem>
+                      <SelectItem value="20">20%</SelectItem>
+                      <SelectItem value="30">30%</SelectItem>
+                      <SelectItem value="40">40%</SelectItem>
+                      <SelectItem value="50">50%</SelectItem>
+                      <SelectItem value="60">60%</SelectItem>
+                      <SelectItem value="70">70%</SelectItem>
+                      <SelectItem value="80">80%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Error Correction Level */}
           <Card>
             <CardHeader>
@@ -2109,16 +2148,219 @@ export default function QRGenerator() {
                     />
                   </div>
 
-                  <Button
-                    onClick={() => updateQRStateAndReset({ logo: undefined })}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Remove Logo
-                  </Button>
+                  {qrState.logo?.startsWith("data:") && (
+                    <Button
+                      onClick={() => updateQRStateAndReset({ logo: undefined })}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      Remove Uploaded Image
+                    </Button>
+                  )}
                 </>
               )}
+
+              {/* Background & Colors */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-3 block">
+                  Background & Colors
+                </Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="backgroundColor" className="text-xs">
+                      Background color
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="backgroundColor"
+                        type="color"
+                        value={qrState.backgroundColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            backgroundColor: e.target.value,
+                          })
+                        }
+                        className="w-12 h-8 p-1 border rounded"
+                      />
+                      <Input
+                        value={qrState.backgroundColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            backgroundColor: e.target.value,
+                          })
+                        }
+                        placeholder="#ffffff"
+                        className="flex-1 text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="dotsColor" className="text-xs">
+                      Dots color
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="dotsColor"
+                        type="color"
+                        value={qrState.dotsColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({ dotsColor: e.target.value })
+                        }
+                        className="w-12 h-8 p-1 border rounded"
+                      />
+                      <Input
+                        value={qrState.dotsColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({ dotsColor: e.target.value })
+                        }
+                        placeholder="#000000"
+                        className="flex-1 text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="cornersSquareColor" className="text-xs">
+                      Corners Square
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="cornersSquareColor"
+                        type="color"
+                        value={qrState.cornersSquareColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            cornersSquareColor: e.target.value,
+                          })
+                        }
+                        className="w-12 h-8 p-1 border rounded"
+                      />
+                      <Input
+                        value={qrState.cornersSquareColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            cornersSquareColor: e.target.value,
+                          })
+                        }
+                        placeholder="#000000"
+                        className="flex-1 text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="cornersDotColor" className="text-xs">
+                      Corners Dot
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="cornersDotColor"
+                        type="color"
+                        value={qrState.cornersDotColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            cornersDotColor: e.target.value,
+                          })
+                        }
+                        className="w-12 h-8 p-1 border rounded"
+                      />
+                      <Input
+                        value={qrState.cornersDotColor}
+                        onChange={(e) =>
+                          updateQRStateAndReset({
+                            cornersDotColor: e.target.value,
+                          })
+                        }
+                        placeholder="#000000"
+                        className="flex-1 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shape Options */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-3 block">
+                  Shape Options
+                </Label>
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Dots type */}
+                  <div>
+                    <Label className="text-xs font-medium mb-2 block">
+                      Dots type
+                    </Label>
+                    <Select
+                      value={qrState.dotsType}
+                      onValueChange={(value) =>
+                        updateQRStateAndReset({ dotsType: value as any })
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dots">dots</SelectItem>
+                        <SelectItem value="rounded">rounded</SelectItem>
+                        <SelectItem value="classy">classy</SelectItem>
+                        <SelectItem value="classy-rounded">
+                          classy-rounded
+                        </SelectItem>
+                        <SelectItem value="square">square</SelectItem>
+                        <SelectItem value="extra-rounded">
+                          extra-rounded
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Corners Square type */}
+                  <div>
+                    <Label className="text-xs font-medium mb-2 block">
+                      Corner Square
+                    </Label>
+                    <Select
+                      value={qrState.cornersSquareType}
+                      onValueChange={(value) =>
+                        updateQRStateAndReset({
+                          cornersSquareType: value as any,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dot">dot</SelectItem>
+                        <SelectItem value="square">square</SelectItem>
+                        <SelectItem value="extra-rounded">
+                          extra-rounded
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Corners Dot type */}
+                  <div>
+                    <Label className="text-xs font-medium mb-2 block">
+                      Corner Dot
+                    </Label>
+                    <Select
+                      value={qrState.cornersDotType}
+                      onValueChange={(value) =>
+                        updateQRStateAndReset({ cornersDotType: value as any })
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dot">dot</SelectItem>
+                        <SelectItem value="square">square</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
               {/* Hidden file input */}
               <input
@@ -2128,246 +2370,6 @@ export default function QRGenerator() {
                 onChange={handleFileUpload}
                 className="hidden"
               />
-            </CardContent>
-          </Card>
-
-          {/* Background & Colors */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Background & Colors</CardTitle>
-              <CardDescription>
-                Customize background and colors of your QR code
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Color Controls */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="backgroundColor">Background color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="backgroundColor"
-                      type="color"
-                      value={qrState.backgroundColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          backgroundColor: e.target.value,
-                        })
-                      }
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      value={qrState.backgroundColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          backgroundColor: e.target.value,
-                        })
-                      }
-                      placeholder="#ffffff"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="dotsColor">Dots color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="dotsColor"
-                      type="color"
-                      value={qrState.dotsColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({ dotsColor: e.target.value })
-                      }
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      value={qrState.dotsColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({ dotsColor: e.target.value })
-                      }
-                      placeholder="#000000"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="cornersSquareColor">
-                    Corners Square color
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="cornersSquareColor"
-                      type="color"
-                      value={qrState.cornersSquareColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          cornersSquareColor: e.target.value,
-                        })
-                      }
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      value={qrState.cornersSquareColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          cornersSquareColor: e.target.value,
-                        })
-                      }
-                      placeholder="#000000"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="cornersDotColor">Corners Dot color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="cornersDotColor"
-                      type="color"
-                      value={qrState.cornersDotColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          cornersDotColor: e.target.value,
-                        })
-                      }
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      value={qrState.cornersDotColor}
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          cornersDotColor: e.target.value,
-                        })
-                      }
-                      placeholder="#000000"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Shape Options */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Shape Options</CardTitle>
-              <CardDescription>
-                Choose the shape style for different parts of the QR code
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-3 gap-6">
-                {/* Dots type */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Dots type
-                  </Label>
-                  <div className="space-y-2">
-                    {[
-                      { value: "dots", label: "dots" },
-                      { value: "rounded", label: "rounded" },
-                      { value: "classy", label: "classy" },
-                      { value: "classy-rounded", label: "classy-rounded" },
-                      { value: "square", label: "square" },
-                      { value: "extra-rounded", label: "extra-rounded" },
-                    ].map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`dots-${value}`}
-                          name="dotsType"
-                          value={value}
-                          checked={qrState.dotsType === value}
-                          onChange={(e) =>
-                            updateQRStateAndReset({
-                              dotsType: e.target.value as any,
-                            })
-                          }
-                          className="w-4 h-4"
-                        />
-                        <Label
-                          htmlFor={`dots-${value}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Corners Square type */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Corners Square type
-                  </Label>
-                  <div className="space-y-2">
-                    {[
-                      { value: "dot", label: "dot" },
-                      { value: "square", label: "square" },
-                      { value: "extra-rounded", label: "extra-rounded" },
-                    ].map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`corners-square-${value}`}
-                          name="cornersSquareType"
-                          value={value}
-                          checked={qrState.cornersSquareType === value}
-                          onChange={(e) =>
-                            updateQRStateAndReset({
-                              cornersSquareType: e.target.value as any,
-                            })
-                          }
-                          className="w-4 h-4"
-                        />
-                        <Label
-                          htmlFor={`corners-square-${value}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Corners Dot type */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Corners Dot type
-                  </Label>
-                  <div className="space-y-2">
-                    {[
-                      { value: "dot", label: "dot" },
-                      { value: "square", label: "square" },
-                    ].map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`corners-dot-${value}`}
-                          name="cornersDotType"
-                          value={value}
-                          checked={qrState.cornersDotType === value}
-                          onChange={(e) =>
-                            updateQRStateAndReset({
-                              cornersDotType: e.target.value as any,
-                            })
-                          }
-                          className="w-4 h-4"
-                        />
-                        <Label
-                          htmlFor={`corners-dot-${value}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
 

@@ -96,4 +96,12 @@ export const tools: Tool[] = [
     description: "Shorten long URLs and track click analytics",
     gradient: "linear-gradient(135deg, #fd79a8 0%, #e84393 100%)",
   },
+  {
+    id: "emoji-copy",
+    name: "Emoji Copy",
+    path: "/emoji-copy",
+    emoji: "😀",
+    description: "Copy emojis easily with search and recent history",
+    gradient: "linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)",
+  },
 ];

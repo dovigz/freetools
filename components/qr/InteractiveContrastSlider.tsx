@@ -184,7 +184,7 @@ export function InteractiveContrastSlider({
         </div>
 
         {/* Quick Contrast Fixes */}
-        <div className="space-y-3 border-t pt-3">
+        <div className="space-y-3 ">
           <div className="text-center">
             <Label className="text-sm font-medium">Quick Contrast Fixes</Label>
           </div>
@@ -213,22 +213,6 @@ export function InteractiveContrastSlider({
               </Button>
             ))}
           </div>
-        </div>
-
-        {/* Technical Preview */}
-        <div className="text-xs text-gray-500 space-y-1 border-t pt-2">
-          <p>
-            <strong>Current Colors:</strong>{" "}
-            <span className="font-mono">Dots: {foregroundColor}</span>
-            {" • "}
-            <span className="font-mono">
-              Background: {backgroundColor}
-            </span>
-          </p>
-          <p className="text-gray-400">
-            Buttons automatically adjust the optimal color to achieve target
-            contrast
-          </p>
         </div>
       </div>
     </div>

@@ -763,8 +763,11 @@ export default function QRGenerator() {
 
         // Check if it's a contrast/readability issue
         if (
-          scanError.message &&
-          scanError.message.includes("finder patterns")
+          typeof scanError === "object" &&
+          scanError !== null &&
+          "message" in scanError &&
+          typeof (scanError as any).message === "string" &&
+          (scanError as any).message.includes("finder patterns")
         ) {
           setScanResult(
             "QR code found but could not be read! This is likely due to poor contrast between the QR dots and background. The scanner found the QR code but couldn't detect the corner finder patterns properly. Try using black dots on a white background for best readability."
@@ -791,7 +794,7 @@ export default function QRGenerator() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
+    <div className="max-w-full mx-auto p-6">
       {/* Hidden div for QR scanning */}
       <div id="temp-qr-reader" style={{ display: "none" }}></div>
 

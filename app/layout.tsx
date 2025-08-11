@@ -131,9 +131,7 @@ export default function RootLayout({
             <div className="flex flex-1 min-h-0 w-screen">
               <AppSidebar />
               <div className="flex-1 flex flex-col min-h-0 min-w-0">
-                <main className="flex-1 p-4 lg:p-6 overflow-auto w-full">
-                  {children}
-                </main>
+                <main className="flex-1  overflow-auto w-full">{children}</main>
               </div>
             </div>
           </div>

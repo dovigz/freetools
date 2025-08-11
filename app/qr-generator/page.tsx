@@ -1039,7 +1039,7 @@ export default function QRGenerator() {
                     handleDataTypeChange(value as typeof dataType)
                   }
                 >
-                  <SelectTrigger id="content-type" className="w-full">
+                  <SelectTrigger id="content-type" className="w-full h-10">
                     <SelectValue placeholder="Choose content type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1896,23 +1896,32 @@ export default function QRGenerator() {
                     {dataType === "phone" && "Phone Number"}
                     {dataType === "text" && "Text Content"}
                   </Label>
-                  <Textarea
-                    id="qrData"
-                    value={qrState.data}
-                    onChange={(e) =>
-                      updateQRStateAndReset({ data: e.target.value })
-                    }
-                    placeholder={
-                      dataType === "url"
-                        ? "https://example.com"
-                        : dataType === "email"
-                          ? "contact@example.com"
-                          : dataType === "phone"
-                            ? "+1234567890"
-                            : "Enter your text here"
-                    }
-                    className="min-h-[100px]"
-                  />
+{dataType === "text" ? (
+                    <Textarea
+                      id="qrData"
+                      value={qrState.data}
+                      onChange={(e) =>
+                        updateQRStateAndReset({ data: e.target.value })
+                      }
+                      placeholder="Enter your text here"
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <Input
+                      id="qrData"
+                      value={qrState.data}
+                      onChange={(e) =>
+                        updateQRStateAndReset({ data: e.target.value })
+                      }
+                      placeholder={
+                        dataType === "url"
+                          ? "https://example.com"
+                          : dataType === "email"
+                            ? "contact@example.com"
+                            : "+1234567890"
+                      }
+                    />
+                  )}
                 </div>
               )}
             </CardContent>

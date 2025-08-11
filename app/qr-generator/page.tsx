@@ -33,7 +33,6 @@ import {
   DollarSign,
   Download,
   Facebook,
-  Image as ImageIcon,
   Instagram,
   Link,
   Linkedin,
@@ -1896,7 +1895,7 @@ export default function QRGenerator() {
                     {dataType === "phone" && "Phone Number"}
                     {dataType === "text" && "Text Content"}
                   </Label>
-{dataType === "text" ? (
+                  {dataType === "text" ? (
                     <Textarea
                       id="qrData"
                       value={qrState.data}
@@ -2008,25 +2007,127 @@ export default function QRGenerator() {
                 Choose from emoji-themed QR code styles
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-0.5">
-                {emojiPresets.map((preset) => (
+            <CardContent className="space-y-4">
+              {/* Custom Logo/Emoji Input */}
+              <div>
+                <Label htmlFor="logoText">Custom Logo Text or Emoji</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="logoText"
+                    value={
+                      qrState.logo?.startsWith("data:")
+                        ? ""
+                        : qrState.logo || ""
+                    }
+                    onChange={(e) =>
+                      updateQRStateAndReset({
+                        logo: e.target.value || undefined,
+                      })
+                    }
+                    placeholder="🚀 or MyLogo or 🔥"
+                    className="flex-1"
+                    maxLength={10}
+                  />
                   <Button
-                    key={preset.id}
+                    onClick={handleUploadClick}
                     variant="outline"
-                    onClick={() => {
-                      applyEmojiPreset(preset);
-                      setHasEverScanned(false);
-                    }}
-                    className="h-8 w-8 p-0 text-center group hover:scale-110 transition-transform border-0"
-                    title={`${preset.name} - ${preset.description}`}
+                    size="sm"
+                    className="px-3"
                   >
-                    <span className="text-base group-hover:scale-110 transition-transform">
-                      {preset.emoji}
-                    </span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
                   </Button>
-                ))}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Enter text, emoji, or upload an image
+                </div>
               </div>
+
+              {/* Upload status indicator */}
+              {qrState.logo?.startsWith("data:") && (
+                <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
+                  ✓ Image uploaded successfully
+                </div>
+              )}
+
+              {/* Emoji Presets */}
+              <div>
+                <Label>Emoji Presets</Label>
+                <div className="flex flex-wrap gap-0.5 mt-2">
+                  {emojiPresets.map((preset) => (
+                    <Button
+                      key={preset.id}
+                      variant="outline"
+                      onClick={() => {
+                        // Preserve current frame state when applying emoji preset
+                        const currentFrameState = qrState.hasFrame;
+                        applyEmojiPreset(preset);
+                        updateQRStateAndReset({ hasFrame: currentFrameState });
+                        setHasEverScanned(false);
+                      }}
+                      className="h-8 w-8 p-0 text-center group hover:scale-110 transition-transform border-0"
+                      title={`${preset.name} - ${preset.description}`}
+                    >
+                      <span className="text-base group-hover:scale-110 transition-transform">
+                        {preset.emoji}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Logo size controls */}
+              {qrState.logo && (
+                <>
+                  <div>
+                    <Label>
+                      Logo Size: {Math.round(qrState.logoSize * 100)}%
+                    </Label>
+                    <Slider
+                      value={[qrState.logoSize]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ logoSize: value })
+                      }
+                      min={0.1}
+                      max={0.8}
+                      step={0.1}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Logo Margin: {qrState.logoMargin}px</Label>
+                    <Slider
+                      value={[qrState.logoMargin]}
+                      onValueChange={([value]) =>
+                        updateQRStateAndReset({ logoMargin: value })
+                      }
+                      min={0}
+                      max={10}
+                      step={1}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => updateQRStateAndReset({ logo: undefined })}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Remove Logo
+                  </Button>
+                </>
+              )}
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </CardContent>
           </Card>
 
@@ -2402,120 +2503,6 @@ export default function QRGenerator() {
                     />
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Logo Options */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5" />
-                Logo Options
-              </CardTitle>
-              <CardDescription>
-                Add text, emoji, or image to the center of your QR code
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                {/* Text/Emoji input with upload button */}
-                <div>
-                  <Label htmlFor="logoText">Logo Text or Emoji</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="logoText"
-                      value={
-                        qrState.logo?.startsWith("data:")
-                          ? ""
-                          : qrState.logo || ""
-                      }
-                      onChange={(e) =>
-                        updateQRStateAndReset({
-                          logo: e.target.value || undefined,
-                        })
-                      }
-                      placeholder="🚀 or MyLogo or 🔥"
-                      className="flex-1"
-                      maxLength={10}
-                    />
-                    <Button
-                      onClick={handleUploadClick}
-                      variant="outline"
-                      size="sm"
-                      className="px-3"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Enter text, emoji, or upload an image
-                  </div>
-                </div>
-
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-
-                {/* Upload status indicator */}
-                {qrState.logo?.startsWith("data:") && (
-                  <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
-                    ✓ Image uploaded successfully
-                  </div>
-                )}
-              </div>
-
-              {/* Logo size slider */}
-              {qrState.logo && (
-                <>
-                  <div>
-                    <Label>
-                      Logo Size: {Math.round(qrState.logoSize * 100)}%
-                    </Label>
-                    <Slider
-                      value={[qrState.logoSize]}
-                      onValueChange={([value]) =>
-                        updateQRStateAndReset({ logoSize: value })
-                      }
-                      min={0.1}
-                      max={0.8}
-                      step={0.1}
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Logo Margin: {qrState.logoMargin}px</Label>
-                    <Slider
-                      value={[qrState.logoMargin]}
-                      onValueChange={([value]) =>
-                        updateQRStateAndReset({ logoMargin: value })
-                      }
-                      min={0}
-                      max={20}
-                      step={1}
-                      className="mt-2"
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Remove logo button */}
-              {qrState.logo && (
-                <Button
-                  onClick={() => updateQRStateAndReset({ logo: undefined })}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  Remove Logo
-                </Button>
               )}
             </CardContent>
           </Card>

@@ -132,7 +132,8 @@ export const useQRGenerator = () => {
       cornersSquareType: preset.config.cornersSquareType as CornerSquareType,
       cornersDotType: preset.config.cornersDotType as CornerDotType,
       logo: preset.config.logo,
-      hasFrame: true
+      // Don't automatically enable frames - let the user decide
+      // hasFrame: true
     })
   }, [updateQRState])
 

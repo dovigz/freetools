@@ -104,4 +104,12 @@ export const tools: Tool[] = [
     description: "Copy emojis easily with search and recent history",
     gradient: "linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)",
   },
+  {
+    id: "ai-chat",
+    name: "AI Chat",
+    path: "/ai-chat",
+    emoji: "🤖",
+    description: "Chat with AI using your own API keys from OpenAI, Claude, and more",
+    gradient: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+  },
 ];

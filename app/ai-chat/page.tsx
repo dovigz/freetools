@@ -6,19 +6,22 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Settings, 
   Menu,
-  Bot
+  Bot,
+  Database
 } from "lucide-react";
 import { chatStorage, type Conversation } from "@/lib/chat-storage";
 import { ChatSidebar } from "@/components/ai-chat/ChatSidebar";
 import { ChatArea } from "@/components/ai-chat/ChatArea";
 import { ProviderPanel } from "@/components/ai-chat/ProviderPanel";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
+import { DatabaseViewer } from "@/components/ai-chat/DatabaseViewer";
 
 export default function AIChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [showProviderPanel, setShowProviderPanel] = useState(false);
+  const [showDatabaseViewer, setShowDatabaseViewer] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load conversations on mount
@@ -40,6 +43,12 @@ export default function AIChatPage() {
     try {
       const convos = await chatStorage.getConversations();
       setConversations(convos);
+      
+      // Check if the active conversation still exists
+      if (activeConversationId && !convos.find(c => c.id === activeConversationId)) {
+        setActiveConversationId(null);
+        setActiveConversation(null);
+      }
     } catch (error) {
       console.error('Failed to load conversations:', error);
     }
@@ -86,6 +95,8 @@ export default function AIChatPage() {
                   onSelectConversation={handleSelectConversation}
                   onNewChat={handleNewChat}
                   onConversationsChanged={loadConversations}
+                  onOpenSettings={() => setShowProviderPanel(true)}
+                  onOpenDatabase={() => setShowDatabaseViewer(true)}
                 />
               </SheetContent>
             </Sheet>
@@ -107,6 +118,7 @@ export default function AIChatPage() {
                     await loadConversations();
                   }
                 }}
+                onOpenSettings={() => setShowProviderPanel(true)}
               />
             </div>
           )}
@@ -116,8 +128,18 @@ export default function AIChatPage() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setShowDatabaseViewer(true)}
+              className="p-2"
+              title="View Local Database"
+            >
+              <Database className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowProviderPanel(!showProviderPanel)}
               className="p-2"
+              title="Configure API Keys"
             >
               <Settings className="w-4 h-4" />
             </Button>
@@ -135,6 +157,8 @@ export default function AIChatPage() {
             onSelectConversation={handleSelectConversation}
             onNewChat={handleNewChat}
             onConversationsChanged={loadConversations}
+            onOpenSettings={() => setShowProviderPanel(true)}
+            onOpenDatabase={() => setShowDatabaseViewer(true)}
           />
         </div>
 
@@ -143,6 +167,7 @@ export default function AIChatPage() {
           conversationId={activeConversationId}
           conversation={activeConversation}
           onProviderSettingsOpen={() => setShowProviderPanel(true)}
+          onConversationUpdate={loadConversations}
         />
 
         {/* Provider Panel */}
@@ -151,6 +176,13 @@ export default function AIChatPage() {
           onClose={() => setShowProviderPanel(false)} 
         />
       </div>
+
+      {/* Database Viewer */}
+      <DatabaseViewer 
+        isOpen={showDatabaseViewer} 
+        onClose={() => setShowDatabaseViewer(false)}
+        onDataChanged={loadConversations}
+      />
     </div>
   );
 }

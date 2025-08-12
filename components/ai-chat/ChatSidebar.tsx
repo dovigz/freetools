@@ -14,7 +14,9 @@ import {
   Edit3, 
   Trash2, 
   Calendar,
-  Clock
+  Clock,
+  Settings,
+  Database
 } from "lucide-react";
 import { chatStorage, type Conversation } from "@/lib/chat-storage";
 import { AI_PROVIDERS } from "@/lib/ai-providers";
@@ -26,6 +28,8 @@ interface ChatSidebarProps {
   onSelectConversation: (id: number) => void;
   onNewChat: () => void;
   onConversationsChanged: () => void;
+  onOpenSettings: () => void;
+  onOpenDatabase: () => void;
 }
 
 interface GroupedConversations {
@@ -41,6 +45,8 @@ export function ChatSidebar({
   onSelectConversation,
   onNewChat,
   onConversationsChanged,
+  onOpenSettings,
+  onOpenDatabase,
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>(conversations);
@@ -254,11 +260,33 @@ export function ChatSidebar({
     <>
       <div className="h-full flex flex-col bg-white border-r">
         {/* Header */}
-        <div className="p-3 border-b">
-          <Button onClick={onNewChat} className="w-full h-9 text-sm">
-            <MessageSquarePlus className="w-4 h-4 mr-2" />
+        <div className="p-3 border-b space-y-2">
+          <Button 
+            onClick={onNewChat} 
+            variant="outline" 
+            className="w-full h-8 text-sm"
+          >
+            <MessageSquarePlus className="w-3 h-3 mr-2" />
             New Chat
           </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              onClick={onOpenSettings} 
+              variant="ghost" 
+              className="h-8 text-xs text-gray-600 hover:text-gray-900"
+            >
+              <Settings className="w-3 h-3 mr-1" />
+              API Keys
+            </Button>
+            <Button 
+              onClick={onOpenDatabase} 
+              variant="ghost" 
+              className="h-8 text-xs text-gray-600 hover:text-gray-900"
+            >
+              <Database className="w-3 h-3 mr-1" />
+              Local Data
+            </Button>
+          </div>
         </div>
 
         {/* Search */}

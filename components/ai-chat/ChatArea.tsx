@@ -17,6 +17,7 @@ import {
   Key
 } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
+import { ModelSelector } from "./ModelSelector";
 import { chatStorage, type Message, type Conversation } from "@/lib/chat-storage";
 import { AI_PROVIDERS, ChatAPI, getProvider, type ChatMessage } from "@/lib/ai-providers";
 import { toast } from "sonner";
@@ -25,12 +26,14 @@ interface ChatAreaProps {
   conversationId: number | null;
   conversation: Conversation | null;
   onProviderSettingsOpen: () => void;
+  onConversationUpdate: () => void;
 }
 
 export function ChatArea({ 
   conversationId, 
   conversation,
-  onProviderSettingsOpen 
+  onProviderSettingsOpen,
+  onConversationUpdate
 }: ChatAreaProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -367,13 +370,20 @@ export function ChatArea({
               </div>
             </div>
             
-            {/* Model info */}
-            <div className="flex items-center justify-between mt-2 pt-2 border-t text-xs text-gray-500">
+            {/* Bottom bar with model selector and shortcuts */}
+            <div className="flex items-center justify-between mt-2 pt-2 border-t">
               <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="text-xs">
-                  <span className="mr-1">{AI_PROVIDERS.find(p => p.id === conversation.provider)?.icon}</span>
-                  {conversation.model}
-                </Badge>
+                <ModelSelector 
+                  currentProvider={conversation.provider}
+                  currentModel={conversation.model}
+                  onModelChange={async (provider, model) => {
+                    if (conversationId) {
+                      await chatStorage.updateConversation(conversationId, { provider, model });
+                      onConversationUpdate();
+                    }
+                  }}
+                  onOpenSettings={onProviderSettingsOpen}
+                />
               </div>
               <div className="text-xs text-gray-400">
                 Press Enter to send, Shift+Enter for new line

@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Circle } from "lucide-react";
+import { ChevronDown, Circle, Settings } from "lucide-react";
 import { AI_PROVIDERS, type AIProvider, type AIModel } from "@/lib/ai-providers";
 import { chatStorage } from "@/lib/chat-storage";
 
@@ -19,18 +19,30 @@ interface ModelSelectorProps {
   currentProvider: string;
   currentModel: string;
   onModelChange: (provider: string, model: string) => void;
+  onRefresh?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function ModelSelector({ 
   currentProvider, 
   currentModel, 
-  onModelChange 
+  onModelChange,
+  onRefresh,
+  onOpenSettings
 }: ModelSelectorProps) {
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   useEffect(() => {
     checkConfiguredProviders();
   }, []);
+
+  // Refresh provider status when component mounts or when explicitly requested
+  useEffect(() => {
+    if (onRefresh) {
+      const interval = setInterval(checkConfiguredProviders, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [onRefresh]);
 
   const checkConfiguredProviders = async () => {
     try {
@@ -113,8 +125,12 @@ export function ModelSelector({
                   </DropdownMenuItem>
                 ))
               ) : (
-                <DropdownMenuItem disabled className="px-6 py-2">
-                  <span className="text-xs text-gray-500">Configure API key to use</span>
+                <DropdownMenuItem 
+                  onClick={() => onOpenSettings?.()} 
+                  className="px-6 py-2 cursor-pointer text-blue-600 hover:text-blue-700"
+                >
+                  <Settings className="w-3 h-3 mr-2" />
+                  <span className="text-xs">Configure API key</span>
                 </DropdownMenuItem>
               )}
               
@@ -124,6 +140,15 @@ export function ModelSelector({
             </div>
           );
         })}
+        
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={() => onOpenSettings?.()} 
+          className="px-4 py-2 cursor-pointer"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          <span className="text-sm">Configure API Keys</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -73,12 +73,28 @@ export const downloadQRCode = async (
     } else {
       const rawData = await qrInstance.getRawData(format);
       if (rawData) {
-        const blob =
-          rawData instanceof Blob
-            ? rawData
-            : new Blob([rawData as unknown as ArrayBuffer], {
-                type: format === "jpeg" ? "image/jpeg" : `image/${format}`,
-              });
+        let blob: Blob;
+        if (rawData instanceof Blob) {
+          blob = rawData;
+        } else if (rawData instanceof ArrayBuffer) {
+          blob = new Blob([rawData], {
+            type: format === "jpeg" ? "image/jpeg" : `image/${format}`,
+          });
+        } else if (typeof rawData === "string") {
+          // Handle base64 data URLs
+          const binaryString = atob(
+            (rawData as string).split(",")[1] || (rawData as string)
+          );
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          blob = new Blob([bytes], {
+            type: format === "jpeg" ? "image/jpeg" : `image/${format}`,
+          });
+        } else {
+          throw new Error("Unsupported rawData type");
+        }
         saveAs(blob, `${filename}.${format === "jpeg" ? "jpg" : format}`);
       }
     }
@@ -98,8 +114,18 @@ export const copyQRToClipboard = async (qrInstance: QRCodeStyling | null) => {
       let blob: Blob | null = null;
       if (rawData instanceof Blob) {
         blob = rawData;
-      } else if (rawData) {
-        blob = new Blob([rawData as unknown as ArrayBuffer], {
+      } else if (rawData instanceof ArrayBuffer) {
+        blob = new Blob([rawData], {
+          type: "image/png",
+        });
+      } else if (typeof rawData === "string") {
+        // Handle base64 data URLs
+        const binaryString = atob(rawData.split(",")[1] || rawData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], {
           type: "image/png",
         });
       }

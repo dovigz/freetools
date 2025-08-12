@@ -44,6 +44,7 @@ function SortableToolItem({
   setHoveredTool,
   togglePin,
   isDragDisabled = false,
+  sidebarState,
 }: {
   tool: any;
   isPinned: boolean;
@@ -53,6 +54,7 @@ function SortableToolItem({
   setHoveredTool: (id: string | null) => void;
   togglePin: (id: string) => void;
   isDragDisabled?: boolean;
+  sidebarState: "expanded" | "collapsed";
 }) {
   const {
     attributes,
@@ -96,8 +98,8 @@ function SortableToolItem({
           onClick={onLinkClick}
           className="flex items-center gap-3 px-3 py-2 text-sm font-medium w-full"
         >
-          {/* Drag handle - only show for pinned tools */}
-          {isPinned && tool.id !== "home" && (
+          {/* Drag handle - only show for pinned tools when sidebar is expanded */}
+          {isPinned && tool.id !== "home" && sidebarState === "expanded" && (
             <div
               {...listeners}
               className="cursor-grab hover:cursor-grabbing text-gray-400 hover:text-gray-600 mr-1"
@@ -106,13 +108,25 @@ function SortableToolItem({
               ⋮⋮
             </div>
           )}
-          <span className="text-base">{tool.emoji}</span>
+          <span
+            className={`text-base ${isPinned && tool.id !== "home" && sidebarState === "collapsed" ? "cursor-grab hover:cursor-grabbing" : ""}`}
+            {...(isPinned && tool.id !== "home" && sidebarState === "collapsed"
+              ? listeners
+              : {})}
+            title={
+              isPinned && tool.id !== "home" && sidebarState === "collapsed"
+                ? "Drag to reorder"
+                : undefined
+            }
+          >
+            {tool.emoji}
+          </span>
           <span className="flex-1">{tool.name}</span>
         </Link>
       </SidebarMenuButton>
 
-      {/* Pin button - only show for non-home tools  and when sidebar is expanded */}
-      {tool.id !== "home" && (
+      {/* Pin button - only show for non-home tools and when sidebar is expanded */}
+      {tool.id !== "home" && sidebarState === "expanded" && (
         <PinButton
           toolId={tool.id}
           isPinned={isPinned}
@@ -126,7 +140,7 @@ function SortableToolItem({
 
 export function AppSidebar({ ...props }) {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
   const { orderedTools, isToolPinned, togglePin, reorderPinned, isLoading } =
     useToolManagement();
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
@@ -229,6 +243,7 @@ export function AppSidebar({ ...props }) {
                           setHoveredTool={setHoveredTool}
                           togglePin={togglePin}
                           isDragDisabled={isMobile}
+                          sidebarState={state}
                         />
                       );
                     })}

@@ -7,6 +7,10 @@ export interface Conversation {
   updatedAt: Date;
   provider: string;
   model: string;
+  // Dual model support
+  secondProvider?: string;
+  secondModel?: string;
+  isDualMode?: boolean;
   isArchived?: boolean;
 }
 
@@ -18,6 +22,12 @@ export interface Message {
   timestamp: Date;
   tokens?: number;
   isStreaming?: boolean;
+  // Branching conversation support
+  provider?: string;
+  model?: string;
+  threadId?: string; // Which conversation thread this belongs to
+  parentMessageId?: number; // Which message this is replying to
+  branchGroup?: string; // Groups messages that branch from the same point
 }
 
 export interface ChatSettings {
@@ -38,8 +48,8 @@ export class ChatDatabase extends Dexie {
   constructor() {
     super('ChatDatabase');
     this.version(1).stores({
-      conversations: '++id, title, createdAt, updatedAt, provider, model, isArchived',
-      messages: '++id, conversationId, role, timestamp, tokens',
+      conversations: '++id, title, createdAt, updatedAt, provider, model, isArchived, isDualMode',
+      messages: '++id, conversationId, role, timestamp, tokens, provider, model, threadId, parentMessageId, branchGroup',
       settings: '++id, provider, model'
     });
   }
@@ -199,5 +209,84 @@ export const chatStorage = {
       await db.messages.clear();
       await db.settings.clear();
     });
+  },
+
+  // Branching conversation helpers
+  async createBranchFromMessage(
+    conversationId: number, 
+    parentMessageId: number, 
+    userMessage: string,
+    provider: string,
+    model: string
+  ): Promise<{ userMessageId: number; threadId: string }> {
+    const threadId = `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const userMessageId = await chatStorage.addMessage({
+      conversationId,
+      role: 'user',
+      content: userMessage,
+      threadId,
+      parentMessageId,
+      provider,
+      model,
+    });
+
+    return { userMessageId, threadId };
+  },
+
+  async addBranchResponse(
+    conversationId: number,
+    userMessageId: number,
+    threadId: string,
+    response: string,
+    provider: string,
+    model: string,
+    tokens?: number
+  ): Promise<number> {
+    return await chatStorage.addMessage({
+      conversationId,
+      role: 'assistant',
+      content: response,
+      threadId,
+      parentMessageId: userMessageId,
+      provider,
+      model,
+      tokens,
+    });
+  },
+
+  async getMessageTree(conversationId: number): Promise<Message[]> {
+    const messages = await chatStorage.getMessages(conversationId);
+    
+    // Sort messages to build conversation tree
+    // Main thread first (no threadId), then by timestamp
+    return messages.sort((a, b) => {
+      // Main thread messages first
+      if (!a.threadId && b.threadId) return -1;
+      if (a.threadId && !b.threadId) return 1;
+      
+      // Then by timestamp
+      return a.timestamp.getTime() - b.timestamp.getTime();
+    });
+  },
+
+  async getThreadMessages(conversationId: number, threadId?: string): Promise<Message[]> {
+    const allMessages = await chatStorage.getMessages(conversationId);
+    
+    if (!threadId) {
+      // Return main thread (messages without threadId)
+      return allMessages.filter(m => !m.threadId).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    }
+    
+    // Return specific thread
+    return allMessages.filter(m => m.threadId === threadId).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  },
+
+  async getBranchingPoint(conversationId: number, messageId: number): Promise<Message[]> {
+    // Get all messages that branch from the given message
+    return await db.messages
+      .where('conversationId').equals(conversationId)
+      .and(m => m.parentMessageId === messageId)
+      .toArray();
   },
 };

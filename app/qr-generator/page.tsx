@@ -800,7 +800,7 @@ export default function QRGenerator() {
   };
 
   return (
-    <div className="max-w-full mx-auto p-4">
+    <div className="max-w-full mx-auto p-2 lg:p-4">
       {/* Hidden div for QR scanning */}
       <div id="temp-qr-reader" style={{ display: "none" }}></div>
 
@@ -880,12 +880,23 @@ export default function QRGenerator() {
         }
       `}</style>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Left Panel - QR Preview */}
         <div className="lg:sticky lg:top-4 space-y-4">
-          <div className="flex justify-center">
-            {/* Quick Actions */}
-            <Card>
+          {/* Interactive Contrast Control - Mobile only */}
+          <div className="lg:hidden">
+            <InteractiveContrastSlider
+              foregroundColor={qrState.dotsColor}
+              backgroundColor={qrState.backgroundColor}
+              onColorChange={handleContrastColorChange}
+              onSwapColors={handleSwapColors}
+            />
+          </div>
+
+          {/* QR Code and Quick Actions */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Quick Actions - Mobile: order-2, Desktop: order-1 (left) */}
+            <Card className="lg:flex-1 order-2 lg:order-1">
               <CardContent className="p-3 relative">
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
@@ -959,8 +970,10 @@ export default function QRGenerator() {
                   </div>
                 )}
               </CardContent>
-            </Card>{" "}
-            <div className="qr-code-container relative">
+            </Card>
+
+            {/* QR Code Display - Mobile: order-1, Desktop: order-2 (right) */}
+            <div className="qr-code-container relative flex justify-center lg:flex-1 order-1 lg:order-2">
               <QRWithFrame
                 ref={qrRef}
                 {...generateQROptions()}
@@ -1003,17 +1016,21 @@ export default function QRGenerator() {
                 </div>
               </div>
             </div>
-          </div>{" "}
-          <InteractiveContrastSlider
-            foregroundColor={qrState.dotsColor}
-            backgroundColor={qrState.backgroundColor}
-            onColorChange={handleContrastColorChange}
-            onSwapColors={handleSwapColors}
-          />
+          </div>
+
+          {/* Interactive Contrast Control - Desktop only */}
+          <div className="hidden lg:block">
+            <InteractiveContrastSlider
+              foregroundColor={qrState.dotsColor}
+              backgroundColor={qrState.backgroundColor}
+              onColorChange={handleContrastColorChange}
+              onSwapColors={handleSwapColors}
+            />
+          </div>
         </div>
 
         {/* Right Panel - All Configuration Options */}
-        <div className="space-y-4 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+        <div className="space-y-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
           {/* Content Configuration */}
           <Card>
             <CardHeader>

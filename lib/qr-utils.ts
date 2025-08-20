@@ -120,7 +120,9 @@ export const copyQRToClipboard = async (qrInstance: QRCodeStyling | null) => {
         });
       } else if (typeof rawData === "string") {
         // Handle base64 data URLs
-        const binaryString = atob(rawData.split(",")[1] || rawData);
+        const binaryString = atob(
+          (rawData as string).split(",")[1] || (rawData as string)
+        );
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);

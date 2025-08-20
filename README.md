@@ -5,20 +5,23 @@ A comprehensive collection of free, web-based developer and productivity tools b
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ or newer
 - npm, yarn, or pnpm
 
 ### Installation & Setup
 
 1. **Fork the repository**
+
    ```bash
-   # Click the "Fork" button on GitHub at: https://github.com/dovigs/freetools
+   # Click the "Fork" button on GitHub at: https://github.com/dovigz/freetools
    # Then clone your fork:
    git clone https://github.com/YOUR_USERNAME/freetools.git
    cd freetools
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -28,6 +31,7 @@ A comprehensive collection of free, web-based developer and productivity tools b
    ```
 
 3. **Start development server**
+
    ```bash
    npm run dev
    # or
@@ -49,31 +53,37 @@ A comprehensive collection of free, web-based developer and productivity tools b
 ## 🛠️ Available Tools
 
 ### Text & Content Tools
+
 - **📝 Text Compare** - Compare two texts and find differences
 - **🔢 Text Counter** - Count characters, words, lines and paragraphs
 - **📋 JSON Formatter** - Format, validate and minify JSON data
 
 ### Security & Encoding Tools
+
 - **🔐 Password Generator** - Generate secure passwords with custom options
 - **🔤 Base64 Encoder** - Encode and decode Base64 strings
 - **🔐 Hash Generator** - Generate MD5, SHA1, SHA256 and other hashes
 
 ### Media & Design Tools
+
 - **🎨 Color Picker** - Pick colors and get hex, RGB, and HSL values
 - **🖼️ Image Resizer** - Resize images while maintaining quality and aspect ratio
 - **📱 QR Generator** - Generate QR codes for URLs, text, and more
 
 ### Web Tools
+
 - **🔗 URL Shortener** - Shorten long URLs and track analytics
 
 ## 🏗️ Tech Stack
 
 ### Frontend Framework
+
 - **Next.js 15** - React framework with App Router
 - **React 19** - Latest React with concurrent features
 - **TypeScript** - Type-safe JavaScript
 
 ### UI & Styling
+
 - **Tailwind CSS** - Utility-first CSS framework
 - **shadcn/ui** - High-quality component library
 - **Radix UI** - Accessible, unstyled UI primitives
@@ -81,6 +91,7 @@ A comprehensive collection of free, web-based developer and productivity tools b
 - **next-themes** - Theme switching support
 
 ### Key Libraries
+
 - **class-variance-authority** - Component variants
 - **clsx** & **tailwind-merge** - Conditional styling
 - **cmdk** - Command palette component
@@ -124,6 +135,7 @@ freetools/
 ## 🎨 Component Architecture
 
 ### UI Components (shadcn/ui)
+
 The project uses shadcn/ui components built on Radix UI primitives:
 
 - **Layout**: `sidebar`, `sheet`, `separator`
@@ -134,15 +146,18 @@ The project uses shadcn/ui components built on Radix UI primitives:
 - **Data Display**: `card`, `table`, `badge`, `avatar`
 
 ### Styling System
+
 - **Design Tokens**: CSS custom properties for colors, spacing, and typography
 - **Dark Mode**: Built-in dark/light theme switching
 - **Responsive**: Mobile-first responsive design
 - **Animations**: Tailwind CSS animations and transitions
 
 ### Color Palette
+
 Each tool features a unique gradient design:
+
 - QR Generator: Purple-blue gradient
-- Text Compare: Orange-red gradient  
+- Text Compare: Orange-red gradient
 - Password Generator: Green-mint gradient
 - Base64 Encoder: Gray gradient
 - Color Picker: Red-orange gradient
@@ -155,6 +170,7 @@ Each tool features a unique gradient design:
 ## 🔧 Development Guidelines
 
 ### Code Style
+
 - TypeScript strict mode enabled
 - ESLint configuration for Next.js
 - Prettier for code formatting
@@ -162,6 +178,7 @@ Each tool features a unique gradient design:
 - CSS-in-JS with Tailwind utilities
 
 ### Component Patterns
+
 - Use shadcn/ui components as base
 - Implement proper TypeScript interfaces
 - Follow React 19 best practices
@@ -169,6 +186,7 @@ Each tool features a unique gradient design:
 - Implement proper loading and error states
 
 ### File Naming
+
 - Components: PascalCase (`MainHeader.tsx`)
 - Pages: lowercase (`page.tsx`)
 - Utilities: camelCase (`utils.ts`)
@@ -177,12 +195,15 @@ Each tool features a unique gradient design:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Push your code to GitHub
 2. Connect your repository to Vercel
 3. Deploy automatically on each push
 
 ### Other Platforms
+
 The project can be deployed on any platform supporting Node.js:
+
 - Netlify
 - Railway
 - AWS Amplify
@@ -217,6 +238,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-**Repository:** [https://github.com/dovigs/freetools](https://github.com/dovigs/freetools)
+**Repository:** [https://github.com/dovigz/freetools](https://github.com/dovigz/freetools)
 
 Built with ❤️ by the developer community

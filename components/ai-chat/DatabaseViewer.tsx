@@ -281,7 +281,7 @@ export function DatabaseViewer({
                         <li>Export your data for backup</li>
                         <li>Delete individual messages or conversations</li>
                         <li>Clear all data to start fresh</li>
-                        <li>View exactly what's stored locally</li>
+                        <li>View exactly what&apos;s stored locally</li>
                       </ul>
                     </CardContent>
                   </Card>

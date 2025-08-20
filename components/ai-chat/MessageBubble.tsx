@@ -118,21 +118,18 @@ export function MessageBubble({
                 {isAssistant ? (
                   <ReactMarkdown
                     components={{
-                      code: ({
-                        node,
-                        inline,
-                        className,
-                        children,
-                        ...props
-                      }) => {
+                      code: (props) => {
+                        const { children, className, ...rest } = props;
+                        // @ts-expect-error: 'inline' is not in the type, but react-markdown provides it
+                        const inline = props.inline;
                         return !inline ? (
                           <pre className="bg-gray-800 text-gray-100 rounded p-3 overflow-x-auto text-sm my-2">
-                            <code {...props}>{children}</code>
+                            <code {...rest}>{children}</code>
                           </pre>
                         ) : (
                           <code
                             className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-sm"
-                            {...props}
+                            {...rest}
                           >
                             {children}
                           </code>

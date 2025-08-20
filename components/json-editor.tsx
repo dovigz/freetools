@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Copy, Download, Upload } from 'lucide-react';
-import { validateJSON, formatJSON, minifyJSON } from '@/lib/json-formatter';
-import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { formatJSON, minifyJSON, validateJSON } from "@/lib/json-formatter";
+import { cn } from "@/lib/utils";
+import { Copy, Download, Upload } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface JSONEditorProps {
   value: string;
@@ -17,26 +17,37 @@ interface JSONEditorProps {
   className?: string;
 }
 
-export function JSONEditor({ value, onChange, onParsedChange, className }: JSONEditorProps) {
-  const [validationResult, setValidationResult] = useState<{ isValid: boolean; error?: string }>({ isValid: true });
+export function JSONEditor({
+  value,
+  onChange,
+  onParsedChange,
+  className,
+}: JSONEditorProps) {
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    error?: string;
+  }>({ isValid: true });
 
-  const handleInputChange = useCallback((newValue: string) => {
-    onChange(newValue);
-    
-    // Validate JSON
-    const validation = validateJSON(newValue);
-    setValidationResult(validation);
+  const handleInputChange = useCallback(
+    (newValue: string) => {
+      onChange(newValue);
 
-    // Parse and notify parent if valid
-    if (validation.isValid && onParsedChange) {
-      try {
-        const parsed = JSON.parse(newValue);
-        onParsedChange(parsed);
-      } catch (e) {
-        // Handle edge case
+      // Validate JSON
+      const validation = validateJSON(newValue);
+      setValidationResult(validation);
+
+      // Parse and notify parent if valid
+      if (validation.isValid && onParsedChange) {
+        try {
+          const parsed = JSON.parse(newValue);
+          onParsedChange(parsed);
+        } catch (e) {
+          // Handle edge case
+        }
       }
-    }
-  }, [onChange, onParsedChange]);
+    },
+    [onChange, onParsedChange]
+  );
 
   const formatJson = useCallback(() => {
     if (validationResult.isValid) {
@@ -71,30 +82,33 @@ export function JSONEditor({ value, onChange, onParsedChange, className }: JSONE
   }, [value]);
 
   const downloadJson = useCallback(() => {
-    const blob = new Blob([value], { type: 'application/json' });
+    const blob = new Blob([value], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'data.json';
+    a.download = "data.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [value]);
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        handleInputChange(content);
-      };
-      reader.readAsText(file);
-    }
-    // Reset input
-    event.target.value = '';
-  }, [handleInputChange]);
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+          handleInputChange(content);
+        };
+        reader.readAsText(file);
+      }
+      // Reset input
+      event.target.value = "";
+    },
+    [handleInputChange]
+  );
 
   return (
     <Card className={cn("h-full", className)}>
@@ -102,39 +116,37 @@ export function JSONEditor({ value, onChange, onParsedChange, className }: JSONE
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">JSON Input</CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant={validationResult.isValid ? "default" : "destructive"}>
+            <Badge
+              variant={validationResult.isValid ? "default" : "destructive"}
+            >
               {validationResult.isValid ? "Valid" : "Invalid"}
             </Badge>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={formatJson}
             disabled={!validationResult.isValid}
           >
             Format
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={minifyJson}
             disabled={!validationResult.isValid}
           >
             Minify
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={copyToClipboard}
-          >
+          <Button size="sm" variant="outline" onClick={copyToClipboard}>
             <Copy className="w-4 h-4 mr-1" />
             Copy
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={downloadJson}
             disabled={!value}
           >
@@ -160,9 +172,7 @@ export function JSONEditor({ value, onChange, onParsedChange, className }: JSONE
       <CardContent className="h-full">
         {!validationResult.isValid && (
           <Alert className="mb-4" variant="destructive">
-            <AlertDescription>
-              {validationResult.error}
-            </AlertDescription>
+            <AlertDescription>{validationResult.error}</AlertDescription>
           </Alert>
         )}
         <Textarea

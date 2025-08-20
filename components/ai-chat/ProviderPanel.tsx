@@ -52,6 +52,7 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, boolean | null>>({});
+  const [savedStates, setSavedStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -67,9 +68,21 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
 
       for (const provider of AI_PROVIDERS) {
         const providerSetting = allSettings.find(s => s.provider === provider.id);
+        
+        // Decrypt API key if it exists
+        let decryptedApiKey = '';
+        if (providerSetting?.apiKey) {
+          try {
+            decryptedApiKey = await encryptionUtils.decrypt(providerSetting.apiKey);
+          } catch (error) {
+            console.error('Failed to decrypt API key for', provider.id, error);
+            decryptedApiKey = ''; // Clear invalid encrypted data
+          }
+        }
+        
         settingsMap[provider.id] = {
           provider: provider.id,
-          apiKey: providerSetting?.apiKey || '',
+          apiKey: decryptedApiKey,
           model: providerSetting?.model || provider.models[0].id,
           temperature: providerSetting?.temperature || 0.7,
           maxTokens: providerSetting?.maxTokens || 2048,
@@ -78,6 +91,14 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
       }
 
       setCurrentSettings(settingsMap);
+      
+      // Update saved states - mark as saved if API key exists
+      const savedStatesMap: Record<string, boolean> = {};
+      for (const provider of AI_PROVIDERS) {
+        const providerSetting = allSettings.find(s => s.provider === provider.id);
+        savedStatesMap[provider.id] = !!(providerSetting?.apiKey);
+      }
+      setSavedStates(savedStatesMap);
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error('Failed to load settings');
@@ -108,6 +129,9 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
         systemPrompt: settings.systemPrompt,
       });
 
+      // Mark as saved
+      setSavedStates(prev => ({ ...prev, [providerId]: true }));
+      
       toast.success(`Settings saved for ${AI_PROVIDERS.find(p => p.id === providerId)?.name}`);
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -174,6 +198,7 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
         }
       });
       setTestResults({ ...testResults, [providerId]: null });
+      setSavedStates(prev => ({ ...prev, [providerId]: false }));
       toast.success('Settings deleted');
     } catch (error) {
       console.error('Failed to delete settings:', error);
@@ -222,6 +247,11 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
         [key]: value,
       }
     });
+    
+    // Mark as unsaved when settings change
+    if (key === 'apiKey' && value !== '') {
+      setSavedStates(prev => ({ ...prev, [providerId]: false }));
+    }
   };
 
   const getCurrentProvider = () => AI_PROVIDERS.find(p => p.id === selectedProvider);
@@ -257,8 +287,10 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                     <div className="flex items-center space-x-2">
                       <span>{provider.icon}</span>
                       <span>{provider.name}</span>
-                      {currentSettings[provider.id]?.apiKey && (
-                        <CheckCircle className="w-3 h-3 text-green-500" />
+                      {savedStates[provider.id] && (
+                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                          Saved
+                        </Badge>
                       )}
                     </div>
                   </SelectItem>
@@ -290,8 +322,13 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                         placeholder={getCurrentProvider()?.apiKeyPlaceholder}
                         value={getCurrentSettings()?.apiKey || ''}
                         onChange={(e) => updateSetting(selectedProvider, 'apiKey', e.target.value)}
-                        className="pr-10"
+                        className={`pr-20 ${savedStates[selectedProvider] ? 'border-green-500' : ''}`}
                       />
+                      {savedStates[selectedProvider] && getCurrentSettings()?.apiKey && (
+                        <div className="absolute right-10 top-0 h-full flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        </div>
+                      )}
                       <Button
                         type="button"
                         variant="ghost"
@@ -309,9 +346,10 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                         onClick={() => saveSettings(selectedProvider)}
                         disabled={isLoading}
                         className="flex-1"
+                        variant={savedStates[selectedProvider] ? "outline" : "default"}
                       >
                         <Save className="w-3 h-3 mr-1" />
-                        Save
+                        {savedStates[selectedProvider] ? 'Saved' : 'Save'}
                       </Button>
                       <Button
                         size="sm"

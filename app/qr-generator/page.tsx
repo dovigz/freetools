@@ -50,7 +50,7 @@ import {
   Wifi,
   Youtube,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { InteractiveContrastSlider } from "@/components/qr/InteractiveContrastSlider";
@@ -271,7 +271,9 @@ export default function QRGenerator() {
   const [hasEverScanned, setHasEverScanned] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<"png" | "svg">("png");
+  const [showFloatingPreview, setShowFloatingPreview] = useState(false);
   const qrRef = useRef<StyledQRCodeRef>(null);
+  const qrContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Wrapper function to reset scan state whenever QR changes
@@ -591,6 +593,35 @@ export default function QRGenerator() {
       backgroundColor: currentDotsColor,
       cornersSquareColor: currentBackgroundColor,
       cornersDotColor: currentBackgroundColor,
+    });
+  };
+
+  // Intersection Observer for floating QR preview on mobile
+  useEffect(() => {
+    const qrContainer = qrContainerRef.current;
+    if (!qrContainer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show floating preview when QR is out of view on mobile
+        setShowFloatingPreview(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.1, // Show when less than 10% visible
+        rootMargin: "-20px", // Add some margin for better UX
+      }
+    );
+
+    observer.observe(qrContainer);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Smooth scroll back to QR code
+  const scrollToQR = () => {
+    qrContainerRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
     });
   };
 
@@ -973,7 +1004,10 @@ export default function QRGenerator() {
             </Card>
 
             {/* QR Code Display - Mobile: order-1, Desktop: order-2 (right) */}
-            <div className="qr-code-container relative flex justify-center lg:flex-1 order-1 lg:order-2">
+            <div
+              ref={qrContainerRef}
+              className="qr-code-container relative flex justify-center lg:flex-1 order-1 lg:order-2"
+            >
               <QRWithFrame
                 ref={qrRef}
                 {...generateQROptions()}
@@ -2578,6 +2612,30 @@ export default function QRGenerator() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Floating QR Preview - Mobile Only */}
+      {showFloatingPreview && (
+        <div
+          onClick={scrollToQR}
+          className="fixed bottom-4 right-4 z-50 lg:hidden cursor-pointer group"
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-0 transition-all duration-200 group-hover:shadow-xl group-active:scale-95">
+            <div className="w-25 h-25 flex items-center justify-center">
+              <QRWithFrame
+                {...generateQROptions()}
+                hasFrame={false} // No frame in preview for simplicity
+                frameColor={qrState.frameColor}
+                textColor={qrState.textColor}
+                frameText={qrState.frameText}
+                textPosition={qrState.textPosition}
+                width={120}
+                height={120}
+                className="pointer-events-none w-full h-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

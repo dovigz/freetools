@@ -310,7 +310,7 @@ export default function QRGenerator() {
 
     switch (type) {
       case "url":
-        updateQRStateAndReset({ data: "https://freetools.vercel.app" });
+        updateQRStateAndReset({ data: "https://freetools.now" });
         break;
       case "email":
         updateQRStateAndReset({ data: "contact@example.com" });
@@ -800,7 +800,7 @@ export default function QRGenerator() {
   };
 
   return (
-    <div className="max-w-full mx-auto p-6">
+    <div className="max-w-full mx-auto p-4">
       {/* Hidden div for QR scanning */}
       <div id="temp-qr-reader" style={{ display: "none" }}></div>
 
@@ -880,69 +880,14 @@ export default function QRGenerator() {
         }
       `}</style>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Left Panel - QR Preview */}
-        <div className="lg:col-span-1 max-h-[calc(100vh-200px)] overflow-y-auto">
-          <div className="sticky top-0 space-y-4">
-            {/* Interactive Contrast Control */}
-            <InteractiveContrastSlider
-              foregroundColor={qrState.dotsColor}
-              backgroundColor={qrState.backgroundColor}
-              onColorChange={handleContrastColorChange}
-              onSwapColors={handleSwapColors}
-            />
-
-            {/* QR Code Display */}
-            <div className="flex justify-center mb-4">
-              <div className="qr-code-container relative">
-                <QRWithFrame
-                  ref={qrRef}
-                  {...generateQROptions()}
-                  hasFrame={qrState.hasFrame}
-                  frameColor={qrState.frameColor}
-                  textColor={qrState.textColor}
-                  frameText={qrState.frameText}
-                  textPosition={qrState.textPosition}
-                  className="drop-shadow-sm"
-                  onQRCodeReady={handleQRReady}
-                />
-
-                {/* Scanning Overlay */}
-                <div
-                  id="scan-overlay"
-                  className="absolute inset-0 bg-black bg-opacity-50 rounded-lg items-center justify-center"
-                  style={{ display: "none" }}
-                >
-                  <div className="relative w-full h-full">
-                    {/* Scanning Line */}
-                    <div
-                      id="scan-line"
-                      className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-lg"
-                      style={{
-                        top: "0%",
-                        boxShadow: "0 0 10px #ef4444, 0 0 20px #ef4444",
-                      }}
-                    />
-
-                    {/* Corner brackets */}
-                    <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
-                    <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
-                    <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-red-500"></div>
-                    <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-red-500"></div>
-
-                    {/* Scanning text */}
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium">
-                      Scanning QR Code...
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+        <div className="lg:sticky lg:top-4 space-y-4">
+          <div className="flex justify-center">
             {/* Quick Actions */}
             <Card>
-              <CardContent className="p-4 relative">
-                <div className="space-y-3">
+              <CardContent className="p-3 relative">
+                <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       onClick={() => openDownloadModal("png")}
@@ -1014,12 +959,61 @@ export default function QRGenerator() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          </div>
+            </Card>{" "}
+            <div className="qr-code-container relative">
+              <QRWithFrame
+                ref={qrRef}
+                {...generateQROptions()}
+                hasFrame={qrState.hasFrame}
+                frameColor={qrState.frameColor}
+                textColor={qrState.textColor}
+                frameText={qrState.frameText}
+                textPosition={qrState.textPosition}
+                className="drop-shadow-sm"
+                onQRCodeReady={handleQRReady}
+              />
+
+              {/* Scanning Overlay */}
+              <div
+                id="scan-overlay"
+                className="absolute inset-0 bg-black bg-opacity-50 rounded-lg items-center justify-center"
+                style={{ display: "none" }}
+              >
+                <div className="relative w-full h-full">
+                  {/* Scanning Line */}
+                  <div
+                    id="scan-line"
+                    className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-lg"
+                    style={{
+                      top: "0%",
+                      boxShadow: "0 0 10px #ef4444, 0 0 20px #ef4444",
+                    }}
+                  />
+
+                  {/* Corner brackets */}
+                  <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
+                  <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
+                  <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-red-500"></div>
+                  <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-red-500"></div>
+
+                  {/* Scanning text */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium">
+                    Scanning QR Code...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>{" "}
+          <InteractiveContrastSlider
+            foregroundColor={qrState.dotsColor}
+            backgroundColor={qrState.backgroundColor}
+            onColorChange={handleContrastColorChange}
+            onSwapColors={handleSwapColors}
+          />
         </div>
 
         {/* Right Panel - All Configuration Options */}
-        <div className="lg:col-span-2 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+        <div className="space-y-4 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
           {/* Content Configuration */}
           <Card>
             <CardHeader>

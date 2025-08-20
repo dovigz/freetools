@@ -1,35 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { 
-  X, 
-  Eye, 
-  EyeOff, 
-  Save, 
-  Trash2, 
-  Shield, 
-  Key, 
-  Settings,
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AI_PROVIDERS,
+  encryptionUtils,
+  type AIModel,
+} from "@/lib/ai-providers";
+import { chatStorage } from "@/lib/chat-storage";
+import {
   AlertTriangle,
   CheckCircle,
-  Info,
   Download,
-  Upload
+  Eye,
+  EyeOff,
+  Info,
+  Save,
+  Settings,
+  Shield,
+  Trash2,
+  Upload,
+  X,
 } from "lucide-react";
-import { AI_PROVIDERS, encryptionUtils, type AIProvider, type AIModel } from "@/lib/ai-providers";
-import { chatStorage, type ChatSettings } from "@/lib/chat-storage";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ProviderPanelProps {
@@ -47,11 +61,15 @@ interface ProviderSettings {
 }
 
 export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
-  const [currentSettings, setCurrentSettings] = useState<Record<string, ProviderSettings>>({});
+  const [currentSettings, setCurrentSettings] = useState<
+    Record<string, ProviderSettings>
+  >({});
   const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS[0].id);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [testResults, setTestResults] = useState<Record<string, boolean | null>>({});
+  const [testResults, setTestResults] = useState<
+    Record<string, boolean | null>
+  >({});
   const [savedStates, setSavedStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -67,41 +85,47 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
       const settingsMap: Record<string, ProviderSettings> = {};
 
       for (const provider of AI_PROVIDERS) {
-        const providerSetting = allSettings.find(s => s.provider === provider.id);
-        
+        const providerSetting = allSettings.find(
+          (s) => s.provider === provider.id
+        );
+
         // Decrypt API key if it exists
-        let decryptedApiKey = '';
+        let decryptedApiKey = "";
         if (providerSetting?.apiKey) {
           try {
-            decryptedApiKey = await encryptionUtils.decrypt(providerSetting.apiKey);
+            decryptedApiKey = await encryptionUtils.decrypt(
+              providerSetting.apiKey
+            );
           } catch (error) {
-            console.error('Failed to decrypt API key for', provider.id, error);
-            decryptedApiKey = ''; // Clear invalid encrypted data
+            console.error("Failed to decrypt API key for", provider.id, error);
+            decryptedApiKey = ""; // Clear invalid encrypted data
           }
         }
-        
+
         settingsMap[provider.id] = {
           provider: provider.id,
           apiKey: decryptedApiKey,
           model: providerSetting?.model || provider.models[0].id,
           temperature: providerSetting?.temperature || 0.7,
           maxTokens: providerSetting?.maxTokens || 2048,
-          systemPrompt: providerSetting?.systemPrompt || '',
+          systemPrompt: providerSetting?.systemPrompt || "",
         };
       }
 
       setCurrentSettings(settingsMap);
-      
+
       // Update saved states - mark as saved if API key exists
       const savedStatesMap: Record<string, boolean> = {};
       for (const provider of AI_PROVIDERS) {
-        const providerSetting = allSettings.find(s => s.provider === provider.id);
-        savedStatesMap[provider.id] = !!(providerSetting?.apiKey);
+        const providerSetting = allSettings.find(
+          (s) => s.provider === provider.id
+        );
+        savedStatesMap[provider.id] = !!providerSetting?.apiKey;
       }
       setSavedStates(savedStatesMap);
     } catch (error) {
-      console.error('Failed to load settings:', error);
-      toast.error('Failed to load settings');
+      console.error("Failed to load settings:", error);
+      toast.error("Failed to load settings");
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +137,7 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
 
     try {
       setIsLoading(true);
-      
+
       // Encrypt API key if provided
       let encryptedApiKey = settings.apiKey;
       if (settings.apiKey) {
@@ -130,12 +154,14 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
       });
 
       // Mark as saved
-      setSavedStates(prev => ({ ...prev, [providerId]: true }));
-      
-      toast.success(`Settings saved for ${AI_PROVIDERS.find(p => p.id === providerId)?.name}`);
+      setSavedStates((prev) => ({ ...prev, [providerId]: true }));
+
+      toast.success(
+        `Settings saved for ${AI_PROVIDERS.find((p) => p.id === providerId)?.name}`
+      );
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      toast.error('Failed to save settings');
+      console.error("Failed to save settings:", error);
+      toast.error("Failed to save settings");
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +170,7 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
   const testApiKey = async (providerId: string) => {
     const settings = currentSettings[providerId];
     if (!settings?.apiKey) {
-      toast.error('Please enter an API key first');
+      toast.error("Please enter an API key first");
       return;
     }
 
@@ -152,32 +178,34 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
       setIsLoading(true);
       setTestResults({ ...testResults, [providerId]: null });
 
-      const provider = AI_PROVIDERS.find(p => p.id === providerId);
+      const provider = AI_PROVIDERS.find((p) => p.id === providerId);
       if (!provider) return;
 
       // Simple test call to validate API key
       const response = await fetch(provider.baseUrl, {
-        method: 'POST',
+        method: "POST",
         headers: provider.headers(settings.apiKey),
-        body: JSON.stringify(provider.formatRequest(
-          [{ role: 'user', content: 'Hello' }],
-          settings.model,
-          { maxTokens: 10 }
-        )),
+        body: JSON.stringify(
+          provider.formatRequest(
+            [{ role: "user", content: "Hello" }],
+            settings.model,
+            { maxTokens: 10 }
+          )
+        ),
       });
 
       const isValid = response.ok;
       setTestResults({ ...testResults, [providerId]: isValid });
-      
+
       if (isValid) {
-        toast.success('API key is valid!');
+        toast.success("API key is valid!");
       } else {
-        toast.error('API key test failed');
+        toast.error("API key test failed");
       }
     } catch (error) {
-      console.error('API key test failed:', error);
+      console.error("API key test failed:", error);
       setTestResults({ ...testResults, [providerId]: false });
-      toast.error('API key test failed');
+      toast.error("API key test failed");
     } finally {
       setIsLoading(false);
     }
@@ -190,36 +218,39 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
         ...currentSettings,
         [providerId]: {
           provider: providerId,
-          apiKey: '',
-          model: AI_PROVIDERS.find(p => p.id === providerId)?.models[0].id || '',
+          apiKey: "",
+          model:
+            AI_PROVIDERS.find((p) => p.id === providerId)?.models[0].id || "",
           temperature: 0.7,
           maxTokens: 2048,
-          systemPrompt: '',
-        }
+          systemPrompt: "",
+        },
       });
       setTestResults({ ...testResults, [providerId]: null });
-      setSavedStates(prev => ({ ...prev, [providerId]: false }));
-      toast.success('Settings deleted');
+      setSavedStates((prev) => ({ ...prev, [providerId]: false }));
+      toast.success("Settings deleted");
     } catch (error) {
-      console.error('Failed to delete settings:', error);
-      toast.error('Failed to delete settings');
+      console.error("Failed to delete settings:", error);
+      toast.error("Failed to delete settings");
     }
   };
 
   const exportSettings = async () => {
     try {
       const data = await chatStorage.exportAllData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `ai-chat-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `ai-chat-backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Settings exported successfully');
+      toast.success("Settings exported successfully");
     } catch (error) {
-      console.error('Failed to export settings:', error);
-      toast.error('Failed to export settings');
+      console.error("Failed to export settings:", error);
+      toast.error("Failed to export settings");
     }
   };
 
@@ -232,29 +263,34 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
       const data = JSON.parse(text);
       await chatStorage.importData(data);
       await loadSettings();
-      toast.success('Settings imported successfully');
+      toast.success("Settings imported successfully");
     } catch (error) {
-      console.error('Failed to import settings:', error);
-      toast.error('Failed to import settings');
+      console.error("Failed to import settings:", error);
+      toast.error("Failed to import settings");
     }
   };
 
-  const updateSetting = (providerId: string, key: keyof ProviderSettings, value: any) => {
+  const updateSetting = (
+    providerId: string,
+    key: keyof ProviderSettings,
+    value: any
+  ) => {
     setCurrentSettings({
       ...currentSettings,
       [providerId]: {
         ...currentSettings[providerId],
         [key]: value,
-      }
+      },
     });
-    
+
     // Mark as unsaved when settings change
-    if (key === 'apiKey' && value !== '') {
-      setSavedStates(prev => ({ ...prev, [providerId]: false }));
+    if (key === "apiKey" && value !== "") {
+      setSavedStates((prev) => ({ ...prev, [providerId]: false }));
     }
   };
 
-  const getCurrentProvider = () => AI_PROVIDERS.find(p => p.id === selectedProvider);
+  const getCurrentProvider = () =>
+    AI_PROVIDERS.find((p) => p.id === selectedProvider);
   const getCurrentSettings = () => currentSettings[selectedProvider];
 
   if (!isOpen) return null;
@@ -276,8 +312,13 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
         <div className="p-4 space-y-6">
           {/* Provider Selection */}
           <div>
-            <Label className="text-sm font-medium text-gray-700">AI Provider</Label>
-            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+            <Label className="text-sm font-medium text-gray-700">
+              AI Provider
+            </Label>
+            <Select
+              value={selectedProvider}
+              onValueChange={setSelectedProvider}
+            >
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
@@ -288,7 +329,10 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                       <span>{provider.icon}</span>
                       <span>{provider.name}</span>
                       {savedStates[provider.id] && (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-green-100 text-green-700"
+                        >
                           Saved
                         </Badge>
                       )}
@@ -320,15 +364,22 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                       <Input
                         type={showApiKey ? "text" : "password"}
                         placeholder={getCurrentProvider()?.apiKeyPlaceholder}
-                        value={getCurrentSettings()?.apiKey || ''}
-                        onChange={(e) => updateSetting(selectedProvider, 'apiKey', e.target.value)}
-                        className={`pr-20 ${savedStates[selectedProvider] ? 'border-green-500' : ''}`}
+                        value={getCurrentSettings()?.apiKey || ""}
+                        onChange={(e) =>
+                          updateSetting(
+                            selectedProvider,
+                            "apiKey",
+                            e.target.value
+                          )
+                        }
+                        className={`pr-20 ${savedStates[selectedProvider] ? "border-green-500" : ""}`}
                       />
-                      {savedStates[selectedProvider] && getCurrentSettings()?.apiKey && (
-                        <div className="absolute right-10 top-0 h-full flex items-center">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        </div>
-                      )}
+                      {savedStates[selectedProvider] &&
+                        getCurrentSettings()?.apiKey && (
+                          <div className="absolute right-10 top-0 h-full flex items-center">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          </div>
+                        )}
                       <Button
                         type="button"
                         variant="ghost"
@@ -336,7 +387,11 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                         className="absolute right-0 top-0 h-full px-3"
                         onClick={() => setShowApiKey(!showApiKey)}
                       >
-                        {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showApiKey ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </Button>
                     </div>
 
@@ -346,10 +401,12 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                         onClick={() => saveSettings(selectedProvider)}
                         disabled={isLoading}
                         className="flex-1"
-                        variant={savedStates[selectedProvider] ? "outline" : "default"}
+                        variant={
+                          savedStates[selectedProvider] ? "outline" : "default"
+                        }
                       >
                         <Save className="w-3 h-3 mr-1" />
-                        {savedStates[selectedProvider] ? 'Saved' : 'Save'}
+                        {savedStates[selectedProvider] ? "Saved" : "Save"}
                       </Button>
                       <Button
                         size="sm"
@@ -393,7 +450,8 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                 <Alert>
                   <Shield className="h-4 w-4" />
                   <AlertDescription className="text-xs">
-                    Your API keys are encrypted and stored locally in your browser. They are never sent to our servers.
+                    Your API keys are encrypted and stored locally in your
+                    browser. They are never sent to our servers.
                   </AlertDescription>
                 </Alert>
               </TabsContent>
@@ -404,7 +462,9 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                   <Label className="text-sm font-medium">Model</Label>
                   <Select
                     value={getCurrentSettings()?.model}
-                    onValueChange={(value) => updateSetting(selectedProvider, 'model', value)}
+                    onValueChange={(value) =>
+                      updateSetting(selectedProvider, "model", value)
+                    }
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -428,11 +488,15 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                 <div>
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Temperature</Label>
-                    <Badge variant="outline">{getCurrentSettings()?.temperature}</Badge>
+                    <Badge variant="outline">
+                      {getCurrentSettings()?.temperature}
+                    </Badge>
                   </div>
                   <Slider
                     value={[getCurrentSettings()?.temperature || 0.7]}
-                    onValueChange={(value) => updateSetting(selectedProvider, 'temperature', value[0])}
+                    onValueChange={(value) =>
+                      updateSetting(selectedProvider, "temperature", value[0])
+                    }
                     max={1}
                     min={0}
                     step={0.1}
@@ -448,12 +512,20 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
                 <div>
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Max Tokens</Label>
-                    <Badge variant="outline">{getCurrentSettings()?.maxTokens}</Badge>
+                    <Badge variant="outline">
+                      {getCurrentSettings()?.maxTokens}
+                    </Badge>
                   </div>
                   <Slider
                     value={[getCurrentSettings()?.maxTokens || 2048]}
-                    onValueChange={(value) => updateSetting(selectedProvider, 'maxTokens', value[0])}
-                    max={getCurrentProvider()?.models.find(m => m.id === getCurrentSettings()?.model)?.maxTokens || 4096}
+                    onValueChange={(value) =>
+                      updateSetting(selectedProvider, "maxTokens", value[0])
+                    }
+                    max={
+                      getCurrentProvider()?.models.find(
+                        (m) => m.id === getCurrentSettings()?.model
+                      )?.maxTokens || 4096
+                    }
                     min={100}
                     step={100}
                     className="mt-2"
@@ -462,11 +534,19 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
 
                 {/* System Prompt */}
                 <div>
-                  <Label className="text-sm font-medium">System Prompt (Optional)</Label>
+                  <Label className="text-sm font-medium">
+                    System Prompt (Optional)
+                  </Label>
                   <textarea
                     placeholder="Enter a system prompt to set the AI's behavior..."
-                    value={getCurrentSettings()?.systemPrompt || ''}
-                    onChange={(e) => updateSetting(selectedProvider, 'systemPrompt', e.target.value)}
+                    value={getCurrentSettings()?.systemPrompt || ""}
+                    onChange={(e) =>
+                      updateSetting(
+                        selectedProvider,
+                        "systemPrompt",
+                        e.target.value
+                      )
+                    }
                     className="w-full mt-1 p-2 text-sm border rounded-md resize-none h-20"
                   />
                 </div>
@@ -487,7 +567,9 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
 
           {/* Backup & Restore */}
           <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Backup & Restore</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">
+              Backup & Restore
+            </h4>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
@@ -517,7 +599,8 @@ export function ProviderPanel({ isOpen, onClose }: ProviderPanelProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              Configure your AI providers to start chatting. Each provider requires its own API key.
+              Configure your AI providers to start chatting. Each provider
+              requires its own API key.
             </AlertDescription>
           </Alert>
         </div>

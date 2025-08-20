@@ -42,7 +42,7 @@ export interface QRCodeState {
 }
 
 const initialState: QRCodeState = {
-  data: "https://freetools.vercel.app",
+  data: "https://freetools.now",
   width: 300,
   height: 300,
   margin: 10,

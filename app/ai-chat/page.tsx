@@ -1,25 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { ChatArea } from "@/components/ai-chat/ChatArea";
+import { ChatSidebar } from "@/components/ai-chat/ChatSidebar";
+import { DatabaseViewer } from "@/components/ai-chat/DatabaseViewer";
+import { ModelSelector } from "@/components/ai-chat/ModelSelector";
+import { ProviderPanel } from "@/components/ai-chat/ProviderPanel";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  Settings, 
-  Menu,
-  Bot,
-  Database
-} from "lucide-react";
 import { chatStorage, type Conversation } from "@/lib/chat-storage";
-import { ChatSidebar } from "@/components/ai-chat/ChatSidebar";
-import { ChatArea } from "@/components/ai-chat/ChatArea";
-import { ProviderPanel } from "@/components/ai-chat/ProviderPanel";
-import { ModelSelector } from "@/components/ai-chat/ModelSelector";
-import { DatabaseViewer } from "@/components/ai-chat/DatabaseViewer";
+import { Database, Menu, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function AIChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    number | null
+  >(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
   const [showProviderPanel, setShowProviderPanel] = useState(false);
   const [showDatabaseViewer, setShowDatabaseViewer] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,7 +30,9 @@ export default function AIChatPage() {
   // Update active conversation when ID changes
   useEffect(() => {
     if (activeConversationId) {
-      const conversation = conversations.find(c => c.id === activeConversationId);
+      const conversation = conversations.find(
+        (c) => c.id === activeConversationId
+      );
       setActiveConversation(conversation || null);
     } else {
       setActiveConversation(null);
@@ -43,14 +43,17 @@ export default function AIChatPage() {
     try {
       const convos = await chatStorage.getConversations();
       setConversations(convos);
-      
+
       // Check if the active conversation still exists
-      if (activeConversationId && !convos.find(c => c.id === activeConversationId)) {
+      if (
+        activeConversationId &&
+        !convos.find((c) => c.id === activeConversationId)
+      ) {
         setActiveConversationId(null);
         setActiveConversation(null);
       }
     } catch (error) {
-      console.error('Failed to load conversations:', error);
+      console.error("Failed to load conversations:", error);
     }
   };
 
@@ -65,7 +68,7 @@ export default function AIChatPage() {
       setActiveConversationId(newConvId);
       setSidebarOpen(false);
     } catch (error) {
-      console.error('Failed to create new chat:', error);
+      console.error("Failed to create new chat:", error);
     }
   };
 
@@ -109,12 +112,15 @@ export default function AIChatPage() {
           {/* Center - Model Selector */}
           {activeConversation && (
             <div className="flex items-center space-x-2">
-              <ModelSelector 
+              <ModelSelector
                 currentProvider={activeConversation.provider}
                 currentModel={activeConversation.model}
                 onModelChange={async (provider, model) => {
                   if (activeConversationId) {
-                    await chatStorage.updateConversation(activeConversationId, { provider, model });
+                    await chatStorage.updateConversation(activeConversationId, {
+                      provider,
+                      model,
+                    });
                     await loadConversations();
                   }
                 }}
@@ -163,7 +169,7 @@ export default function AIChatPage() {
         </div>
 
         {/* Chat Area */}
-        <ChatArea 
+        <ChatArea
           conversationId={activeConversationId}
           conversation={activeConversation}
           onProviderSettingsOpen={() => setShowProviderPanel(true)}
@@ -171,15 +177,15 @@ export default function AIChatPage() {
         />
 
         {/* Provider Panel */}
-        <ProviderPanel 
-          isOpen={showProviderPanel} 
-          onClose={() => setShowProviderPanel(false)} 
+        <ProviderPanel
+          isOpen={showProviderPanel}
+          onClose={() => setShowProviderPanel(false)}
         />
       </div>
 
       {/* Database Viewer */}
-      <DatabaseViewer 
-        isOpen={showDatabaseViewer} 
+      <DatabaseViewer
+        isOpen={showDatabaseViewer}
         onClose={() => setShowDatabaseViewer(false)}
         onDataChanged={loadConversations}
       />

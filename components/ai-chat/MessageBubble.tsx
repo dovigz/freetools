@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Copy,
-  RotateCcw,
-  Edit3,
-  Check
-} from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import { format } from "date-fns";
-import { type Message } from "@/lib/chat-storage";
 import { AI_PROVIDERS } from "@/lib/ai-providers";
+import { type Message } from "@/lib/chat-storage";
+import { format } from "date-fns";
+import { Check, Copy, Edit3, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface MessageBubbleProps {
   message: Message;
@@ -37,8 +32,8 @@ export function MessageBubble({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
 
-  const isUser = message.role === 'user';
-  const isAssistant = message.role === 'assistant';
+  const isUser = message.role === "user";
+  const isAssistant = message.role === "assistant";
 
   const handleCopy = async () => {
     try {
@@ -47,7 +42,7 @@ export function MessageBubble({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy message:', error);
+      console.error("Failed to copy message:", error);
     }
   };
 
@@ -59,35 +54,41 @@ export function MessageBubble({
   };
 
   const getProviderIcon = () => {
-    if (!providerInfo) return '🤖';
-    const provider = AI_PROVIDERS.find(p => p.id === providerInfo.provider);
-    return provider?.icon || '🤖';
+    if (!providerInfo) return "🤖";
+    const provider = AI_PROVIDERS.find((p) => p.id === providerInfo.provider);
+    return provider?.icon || "🤖";
   };
 
   const formatTimestamp = (timestamp: Date) => {
-    return format(new Date(timestamp), 'HH:mm');
+    return format(new Date(timestamp), "HH:mm");
   };
 
   return (
-    <div className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} group mb-4`}>
-      <div className={`flex items-start space-x-3 max-w-[75%] ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+    <div
+      className={`flex w-full ${isUser ? "justify-end" : "justify-start"} group mb-4`}
+    >
+      <div
+        className={`flex items-start space-x-3 max-w-[75%] ${isUser ? "flex-row-reverse space-x-reverse" : ""}`}
+      >
         {/* Avatar */}
-        <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
-          isUser 
-            ? 'bg-gray-900 text-white' 
-            : 'bg-gray-100 text-gray-700'
-        }`}>
-          {isUser ? 'U' : getProviderIcon()}
+        <div
+          className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
+            isUser ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {isUser ? "U" : getProviderIcon()}
         </div>
 
         {/* Message Content */}
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+        <div
+          className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
+        >
           {/* Message Bubble */}
-          <div className={`rounded-lg px-4 py-3 ${
-            isUser 
-              ? 'bg-gray-900 text-white' 
-              : 'bg-gray-50 text-gray-900'
-          } ${isStreaming ? 'opacity-80' : ''}`}>
+          <div
+            className={`rounded-lg px-4 py-3 ${
+              isUser ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+            } ${isStreaming ? "opacity-80" : ""}`}
+          >
             {isEditing ? (
               <div className="space-y-2">
                 <textarea
@@ -100,10 +101,14 @@ export function MessageBubble({
                   <Button size="sm" onClick={handleEdit}>
                     Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => {
-                    setIsEditing(false);
-                    setEditContent(message.content);
-                  }}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditContent(message.content);
+                    }}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -113,34 +118,55 @@ export function MessageBubble({
                 {isAssistant ? (
                   <ReactMarkdown
                     components={{
-                      code: ({ node, inline, className, children, ...props }) => {
+                      code: ({
+                        node,
+                        inline,
+                        className,
+                        children,
+                        ...props
+                      }) => {
                         return !inline ? (
                           <pre className="bg-gray-800 text-gray-100 rounded p-3 overflow-x-auto text-sm my-2">
                             <code {...props}>{children}</code>
                           </pre>
                         ) : (
-                          <code className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-sm" {...props}>
+                          <code
+                            className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-sm"
+                            {...props}
+                          >
                             {children}
                           </code>
                         );
                       },
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      p: ({ children }) => (
+                        <p className="mb-2 last:mb-0">{children}</p>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="list-disc pl-4 mb-2">{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="list-decimal pl-4 mb-2">{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="mb-1">{children}</li>
+                      ),
                     }}
                   >
                     {message.content}
                   </ReactMarkdown>
                 ) : (
-                  <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                  <div className="whitespace-pre-wrap break-words">
+                    {message.content}
+                  </div>
                 )}
               </div>
             )}
           </div>
 
           {/* Metadata */}
-          <div className={`flex items-center space-x-2 mt-1 text-xs text-gray-500 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          <div
+            className={`flex items-center space-x-2 mt-1 text-xs text-gray-500 ${isUser ? "flex-row-reverse space-x-reverse" : ""}`}
+          >
             <span>{formatTimestamp(message.timestamp)}</span>
             {isStreaming && (
               <span className="flex items-center">
@@ -148,16 +174,16 @@ export function MessageBubble({
                 Generating
               </span>
             )}
-            {message.tokens && (
-              <span>{message.tokens} tokens</span>
-            )}
+            {message.tokens && <span>{message.tokens} tokens</span>}
           </div>
 
           {/* Action Buttons */}
           {!isEditing && (
-            <div className={`flex items-center space-x-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-              isUser ? 'flex-row-reverse' : ''
-            }`}>
+            <div
+              className={`flex items-center space-x-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                isUser ? "flex-row-reverse" : ""
+              }`}
+            >
               <Button
                 variant="ghost"
                 size="sm"

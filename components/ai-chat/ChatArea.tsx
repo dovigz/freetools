@@ -1,27 +1,34 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Send, 
-  Bot, 
-  StopCircle, 
-  AlertCircle, 
-  Settings,
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AI_PROVIDERS,
+  ChatAPI,
+  getProvider,
+  type ChatMessage,
+} from "@/lib/ai-providers";
+import {
+  chatStorage,
+  type Conversation,
+  type Message,
+} from "@/lib/chat-storage";
+import {
+  AlertCircle,
   MessageCircle,
-  Key
+  Send,
+  Settings,
+  StopCircle,
 } from "lucide-react";
-import { MessageBubble } from "./MessageBubble";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { BranchingMessageView } from "./BranchingMessageView";
 import { DualModelSelector } from "./DualModelSelector";
-import { chatStorage, type Message, type Conversation } from "@/lib/chat-storage";
-import { AI_PROVIDERS, ChatAPI, getProvider, type ChatMessage } from "@/lib/ai-providers";
-import { toast } from "sonner";
+import { MessageBubble } from "./MessageBubble";
 
 interface ChatAreaProps {
   conversationId: number | null;
@@ -30,11 +37,11 @@ interface ChatAreaProps {
   onConversationUpdate: () => void;
 }
 
-export function ChatArea({ 
-  conversationId, 
+export function ChatArea({
+  conversationId,
   conversation,
   onProviderSettingsOpen,
-  onConversationUpdate
+  onConversationUpdate,
 }: ChatAreaProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -42,13 +49,16 @@ export function ChatArea({
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [currentStreamController, setCurrentStreamController] = useState<AbortController | null>(null);
+  const [currentStreamController, setCurrentStreamController] =
+    useState<AbortController | null>(null);
   const [isDualMode, setIsDualMode] = useState(false);
   const [secondProvider, setSecondProvider] = useState<string>("");
   const [secondModel, setSecondModel] = useState<string>("");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(null);
-  
+  const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(
+    null
+  );
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,7 +69,7 @@ export function ChatArea({
     } else {
       setMessages([]);
     }
-    
+
     // Reset conversation-specific state when switching conversations
     setActiveThreadId(null);
     setReplyingToMessage(null);
@@ -92,13 +102,14 @@ export function ChatArea({
 
   const loadMessages = async () => {
     if (!conversationId) return;
-    
+
     try {
-      const conversationMessages = await chatStorage.getMessageTree(conversationId);
+      const conversationMessages =
+        await chatStorage.getMessageTree(conversationId);
       setMessages(conversationMessages);
     } catch (error) {
-      console.error('Failed to load messages:', error);
-      setError('Failed to load conversation messages');
+      console.error("Failed to load messages:", error);
+      setError("Failed to load conversation messages");
     }
   };
 
@@ -111,17 +122,18 @@ export function ChatArea({
       const settings = await chatStorage.getSettings(providerId);
       if (settings.length > 0 && settings[0].apiKey) {
         // Decrypt the API key
-        const { encryptionUtils } = await import('@/lib/ai-providers');
+        const { encryptionUtils } = await import("@/lib/ai-providers");
         return await encryptionUtils.decrypt(settings[0].apiKey);
       }
     } catch (error) {
-      console.error('Failed to get API key:', error);
+      console.error("Failed to get API key:", error);
     }
     return null;
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() || !conversationId || !conversation || isStreaming) return;
+    if (!inputValue.trim() || !conversationId || !conversation || isStreaming)
+      return;
 
     const userMessage = inputValue.trim();
     setInputValue("");
@@ -139,7 +151,7 @@ export function ChatArea({
         await handleSingleModelSend(userMessage);
       }
     } catch (error: any) {
-      console.error('Failed to send message:', error);
+      console.error("Failed to send message:", error);
       setError(`Failed to send message: ${error.message}`);
     }
   };
@@ -150,7 +162,7 @@ export function ChatArea({
     // Add user message to database
     const userMessageId = await chatStorage.addMessage({
       conversationId,
-      role: 'user',
+      role: "user",
       content: userMessage,
       threadId: activeThreadId || undefined,
       parentMessageId: replyingToMessage?.id,
@@ -166,7 +178,11 @@ export function ChatArea({
     await loadMessages();
 
     // Get and send AI response
-    await sendAIResponse(conversation.provider, conversation.model, userMessageId);
+    await sendAIResponse(
+      conversation.provider,
+      conversation.model,
+      userMessageId
+    );
   };
 
   const handleDualModelSend = async (userMessage: string) => {
@@ -175,7 +191,7 @@ export function ChatArea({
     // Add user message to main thread
     const userMessageId = await chatStorage.addMessage({
       conversationId,
-      role: 'user',
+      role: "user",
       content: userMessage,
       provider: conversation.provider,
       model: conversation.model,
@@ -184,28 +200,40 @@ export function ChatArea({
     await loadMessages();
 
     // Create branches for both models
-    const { userMessageId: branch1UserId, threadId: thread1 } = await chatStorage.createBranchFromMessage(
-      conversationId,
-      userMessageId,
-      userMessage,
-      conversation.provider,
-      conversation.model
-    );
+    const { userMessageId: branch1UserId, threadId: thread1 } =
+      await chatStorage.createBranchFromMessage(
+        conversationId,
+        userMessageId,
+        userMessage,
+        conversation.provider,
+        conversation.model
+      );
 
-    const { userMessageId: branch2UserId, threadId: thread2 } = await chatStorage.createBranchFromMessage(
-      conversationId,
-      userMessageId,
-      userMessage,
-      secondProvider,
-      secondModel
-    );
+    const { userMessageId: branch2UserId, threadId: thread2 } =
+      await chatStorage.createBranchFromMessage(
+        conversationId,
+        userMessageId,
+        userMessage,
+        secondProvider,
+        secondModel
+      );
 
     await loadMessages();
 
     // Send to both models in parallel
     await Promise.all([
-      sendAIResponseToBranch(conversation.provider, conversation.model, branch1UserId, thread1),
-      sendAIResponseToBranch(secondProvider, secondModel, branch2UserId, thread2)
+      sendAIResponseToBranch(
+        conversation.provider,
+        conversation.model,
+        branch1UserId,
+        thread1
+      ),
+      sendAIResponseToBranch(
+        secondProvider,
+        secondModel,
+        branch2UserId,
+        thread2
+      ),
     ]);
   };
 
@@ -215,7 +243,7 @@ export function ChatArea({
     // Add user message to the specific thread
     const userMessageId = await chatStorage.addMessage({
       conversationId,
-      role: 'user',
+      role: "user",
       content: userMessage,
       threadId: activeThreadId,
       parentMessageId: replyingToMessage.id,
@@ -225,20 +253,32 @@ export function ChatArea({
 
     // Clear reply state
     setReplyingToMessage(null);
-    const currentProvider = replyingToMessage.provider || conversation?.provider!;
+    const currentProvider =
+      replyingToMessage.provider || conversation?.provider!;
     const currentModel = replyingToMessage.model || conversation?.model!;
     setActiveThreadId(null);
 
     await loadMessages();
 
     // Send AI response in the same thread
-    await sendAIResponseToBranch(currentProvider, currentModel, userMessageId, activeThreadId!);
+    await sendAIResponseToBranch(
+      currentProvider,
+      currentModel,
+      userMessageId,
+      activeThreadId!
+    );
   };
 
-  const sendAIResponse = async (providerId: string, model: string, userMessageId: number) => {
+  const sendAIResponse = async (
+    providerId: string,
+    model: string,
+    userMessageId: number
+  ) => {
     const apiKey = await getAPIKey(providerId);
     if (!apiKey) {
-      setError(`No API key found for ${providerId}. Please configure it in settings.`);
+      setError(
+        `No API key found for ${providerId}. Please configure it in settings.`
+      );
       return;
     }
 
@@ -249,19 +289,36 @@ export function ChatArea({
     }
 
     // Get context messages for this conversation
-    const allMessages = await chatStorage.getThreadMessages(conversationId!, undefined);
-    const chatMessages: ChatMessage[] = allMessages.map(msg => ({
-      role: msg.role as 'user' | 'assistant' | 'system',
+    const allMessages = await chatStorage.getThreadMessages(
+      conversationId!,
+      undefined
+    );
+    const chatMessages: ChatMessage[] = allMessages.map((msg) => ({
+      role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
     }));
 
-    await streamAIResponse(provider, apiKey, model, chatMessages, undefined, userMessageId);
+    await streamAIResponse(
+      provider,
+      apiKey,
+      model,
+      chatMessages,
+      undefined,
+      userMessageId
+    );
   };
 
-  const sendAIResponseToBranch = async (providerId: string, model: string, userMessageId: number, threadId: string) => {
+  const sendAIResponseToBranch = async (
+    providerId: string,
+    model: string,
+    userMessageId: number,
+    threadId: string
+  ) => {
     const apiKey = await getAPIKey(providerId);
     if (!apiKey) {
-      setError(`No API key found for ${providerId}. Please configure it in settings.`);
+      setError(
+        `No API key found for ${providerId}. Please configure it in settings.`
+      );
       return;
     }
 
@@ -272,13 +329,23 @@ export function ChatArea({
     }
 
     // Get context messages for this thread
-    const threadMessages = await chatStorage.getThreadMessages(conversationId!, threadId);
-    const chatMessages: ChatMessage[] = threadMessages.map(msg => ({
-      role: msg.role as 'user' | 'assistant' | 'system',
+    const threadMessages = await chatStorage.getThreadMessages(
+      conversationId!,
+      threadId
+    );
+    const chatMessages: ChatMessage[] = threadMessages.map((msg) => ({
+      role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
     }));
 
-    await streamAIResponse(provider, apiKey, model, chatMessages, threadId, userMessageId);
+    await streamAIResponse(
+      provider,
+      apiKey,
+      model,
+      chatMessages,
+      threadId,
+      userMessageId
+    );
   };
 
   const streamAIResponse = async (
@@ -291,7 +358,7 @@ export function ChatArea({
   ) => {
     setIsStreaming(true);
     setStreamingMessage("");
-    
+
     const controller = new AbortController();
     setCurrentStreamController(controller);
 
@@ -301,7 +368,7 @@ export function ChatArea({
     try {
       for await (const chunk of chatAPI.streamChat(chatMessages, model)) {
         if (controller.signal.aborted) break;
-        
+
         fullResponse += chunk;
         setStreamingMessage(fullResponse);
       }
@@ -309,7 +376,7 @@ export function ChatArea({
       if (fullResponse && !controller.signal.aborted) {
         await chatStorage.addMessage({
           conversationId: conversationId!,
-          role: 'assistant',
+          role: "assistant",
           content: fullResponse,
           threadId,
           parentMessageId: userMessageId,
@@ -320,11 +387,12 @@ export function ChatArea({
         // Update conversation title if it's the first exchange
         const allMessages = await chatStorage.getMessages(conversationId!);
         if (allMessages.length <= 2) {
-          const firstUserMessage = allMessages.find(m => m.role === 'user');
+          const firstUserMessage = allMessages.find((m) => m.role === "user");
           if (firstUserMessage) {
-            const title = firstUserMessage.content.length > 50 
-              ? firstUserMessage.content.substring(0, 50) + "..."
-              : firstUserMessage.content;
+            const title =
+              firstUserMessage.content.length > 50
+                ? firstUserMessage.content.substring(0, 50) + "..."
+                : firstUserMessage.content;
             await chatStorage.updateConversation(conversationId!, { title });
           }
         }
@@ -333,7 +401,7 @@ export function ChatArea({
       }
     } catch (streamError: any) {
       if (!controller.signal.aborted) {
-        console.error('Streaming error:', streamError);
+        console.error("Streaming error:", streamError);
         setError(`Error: ${streamError.message}`);
       }
     } finally {
@@ -353,7 +421,7 @@ export function ChatArea({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -365,12 +433,12 @@ export function ChatArea({
 
   const handleRegenerateMessage = async (messageId: number) => {
     // Find the message and regenerate from that point
-    const messageIndex = messages.findIndex(m => m.id === messageId);
+    const messageIndex = messages.findIndex((m) => m.id === messageId);
     if (messageIndex === -1) return;
 
     // Get messages up to (but not including) the message to regenerate
     const previousMessages = messages.slice(0, messageIndex);
-    
+
     // TODO: Implement regeneration logic
     toast.info("Regeneration feature coming soon!");
   };
@@ -381,7 +449,7 @@ export function ChatArea({
       await loadMessages();
       toast.success("Message updated!");
     } catch (error) {
-      console.error('Failed to update message:', error);
+      console.error("Failed to update message:", error);
       toast.error("Failed to update message");
     }
   };
@@ -392,12 +460,16 @@ export function ChatArea({
     textareaRef.current?.focus();
   };
 
-  const handleToggleDualMode = async (enabled: boolean, provider?: string, model?: string) => {
+  const handleToggleDualMode = async (
+    enabled: boolean,
+    provider?: string,
+    model?: string
+  ) => {
     setIsDualMode(enabled);
     if (enabled && provider && model) {
       setSecondProvider(provider);
       setSecondModel(model);
-      
+
       // Save dual mode settings to conversation
       if (conversationId) {
         await chatStorage.updateConversation(conversationId, {
@@ -410,7 +482,7 @@ export function ChatArea({
     } else {
       setSecondProvider("");
       setSecondModel("");
-      
+
       // Save disabled dual mode to conversation
       if (conversationId) {
         await chatStorage.updateConversation(conversationId, {
@@ -426,7 +498,7 @@ export function ChatArea({
   const handleSecondModelChange = async (provider: string, model: string) => {
     setSecondProvider(provider);
     setSecondModel(model);
-    
+
     // Save second model settings to conversation
     if (conversationId) {
       await chatStorage.updateConversation(conversationId, {
@@ -450,8 +522,9 @@ export function ChatArea({
               AI Chat
             </h1>
             <p className="text-gray-600 text-lg leading-relaxed">
-              Chat with AI using your own API keys. Everything runs locally in your browser — 
-              your conversations and API keys never leave your device.
+              Chat with AI using your own API keys. Everything runs locally in
+              your browser — your conversations and API keys never leave your
+              device.
             </p>
           </div>
 
@@ -461,9 +534,14 @@ export function ChatArea({
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {AI_PROVIDERS.map((provider) => (
-                <div key={provider.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div
+                  key={provider.id}
+                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <div className="text-2xl mb-2">{provider.icon}</div>
-                  <div className="text-sm font-medium text-gray-900">{provider.name}</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {provider.name}
+                  </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {provider.models.length} models
                   </div>
@@ -473,12 +551,17 @@ export function ChatArea({
           </div>
 
           <div className="space-y-4">
-            <Button onClick={onProviderSettingsOpen} size="lg" className="h-11 px-6">
+            <Button
+              onClick={onProviderSettingsOpen}
+              size="lg"
+              className="h-11 px-6"
+            >
               <Settings className="w-4 h-4 mr-2" />
               Configure API Keys
             </Button>
             <p className="text-xs text-gray-500">
-              Add your API keys to start chatting. Keys are stored securely in your browser.
+              Add your API keys to start chatting. Keys are stored securely in
+              your browser.
             </p>
           </div>
         </div>
@@ -512,7 +595,7 @@ export function ChatArea({
               message={{
                 id: 0,
                 conversationId: conversationId,
-                role: 'assistant',
+                role: "assistant",
                 content: streamingMessage,
                 timestamp: new Date(),
               }}
@@ -540,11 +623,13 @@ export function ChatArea({
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={replyingToMessage 
-                    ? `Reply to ${replyingToMessage.provider || conversation.provider}...` 
-                    : isDualMode 
-                      ? `Ask ${conversation.model} and ${secondModel}...`
-                      : `Message ${conversation.model}...`}
+                  placeholder={
+                    replyingToMessage
+                      ? `Reply to ${replyingToMessage.provider || conversation.provider}...`
+                      : isDualMode
+                        ? `Ask ${conversation.model} and ${secondModel}...`
+                        : `Message ${conversation.model}...`
+                  }
                   className="min-h-[50px] max-h-[200px] resize-none border-0 focus:ring-0 shadow-none"
                   disabled={isStreaming}
                 />
@@ -572,14 +657,15 @@ export function ChatArea({
                 )}
               </div>
             </div>
-            
+
             {/* Bottom bar with model selector and shortcuts */}
             <div className="flex items-center justify-between mt-2 pt-2 border-t">
               <div className="flex items-center space-x-2">
                 {replyingToMessage ? (
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline" className="text-xs">
-                      Replying to {replyingToMessage.provider || conversation.provider}
+                      Replying to{" "}
+                      {replyingToMessage.provider || conversation.provider}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -599,7 +685,10 @@ export function ChatArea({
                     currentModel={conversation.model}
                     onModelChange={async (provider, model) => {
                       if (conversationId) {
-                        await chatStorage.updateConversation(conversationId, { provider, model });
+                        await chatStorage.updateConversation(conversationId, {
+                          provider,
+                          model,
+                        });
                         onConversationUpdate();
                       }
                     }}

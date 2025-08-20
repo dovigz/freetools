@@ -1,26 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { 
-  Database, 
-  Trash2, 
-  Download, 
-  Upload, 
+import {
+  chatStorage,
+  type ChatSettings,
+  type Conversation,
+  type Message,
+} from "@/lib/chat-storage";
+import { format } from "date-fns";
+import {
+  Database,
+  Download,
   HardDrive,
   MessageSquare,
   Settings as SettingsIcon,
-  Eye,
-  X
+  Trash2,
+  X,
 } from "lucide-react";
-import { chatStorage, type Conversation, type Message, type ChatSettings } from "@/lib/chat-storage";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
 interface DatabaseViewerProps {
   isOpen: boolean;
@@ -28,13 +40,20 @@ interface DatabaseViewerProps {
   onDataChanged?: () => void;
 }
 
-export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewerProps) {
+export function DatabaseViewer({
+  isOpen,
+  onClose,
+  onDataChanged,
+}: DatabaseViewerProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [settings, setSettings] = useState<ChatSettings[]>([]);
   const [dbSize, setDbSize] = useState<string>("0 KB");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ type: string; id: number } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: string;
+    id: number;
+  } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,13 +69,13 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
         getAllMessages(),
         chatStorage.getSettings(),
       ]);
-      
+
       setConversations(convos);
       setMessages(msgs);
       setSettings(sets);
     } catch (error) {
-      console.error('Failed to load database data:', error);
-      toast.error('Failed to load database data');
+      console.error("Failed to load database data:", error);
+      toast.error("Failed to load database data");
     }
   };
 
@@ -64,12 +83,14 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
     // Get all conversations first, then get all messages
     const allConversations = await chatStorage.getConversations();
     const allMessages: Message[] = [];
-    
+
     for (const conversation of allConversations) {
-      const conversationMessages = await chatStorage.getMessages(conversation.id!);
+      const conversationMessages = await chatStorage.getMessages(
+        conversation.id!
+      );
       allMessages.push(...conversationMessages);
     }
-    
+
     return allMessages;
   };
 
@@ -79,7 +100,7 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
       const data = await chatStorage.exportAllData();
       const jsonString = JSON.stringify(data);
       const sizeInBytes = new Blob([jsonString]).size;
-      
+
       if (sizeInBytes < 1024) {
         setDbSize(`${sizeInBytes} B`);
       } else if (sizeInBytes < 1024 * 1024) {
@@ -88,7 +109,7 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
         setDbSize(`${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`);
       }
     } catch (error) {
-      console.error('Failed to estimate DB size:', error);
+      console.error("Failed to estimate DB size:", error);
     }
   };
 
@@ -98,10 +119,10 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
       await loadDatabaseData();
       await estimateDbSize();
       onDataChanged?.(); // Notify parent components to refresh
-      toast.success('Message deleted');
+      toast.success("Message deleted");
     } catch (error) {
-      console.error('Failed to delete message:', error);
-      toast.error('Failed to delete message');
+      console.error("Failed to delete message:", error);
+      toast.error("Failed to delete message");
     }
   };
 
@@ -111,10 +132,10 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
       await loadDatabaseData();
       await estimateDbSize();
       onDataChanged?.(); // Notify parent components to refresh
-      toast.success('Conversation deleted');
+      toast.success("Conversation deleted");
     } catch (error) {
-      console.error('Failed to delete conversation:', error);
-      toast.error('Failed to delete conversation');
+      console.error("Failed to delete conversation:", error);
+      toast.error("Failed to delete conversation");
     }
   };
 
@@ -124,27 +145,29 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
       await loadDatabaseData();
       await estimateDbSize();
       onDataChanged?.(); // Notify parent components to refresh
-      toast.success('All data cleared');
+      toast.success("All data cleared");
     } catch (error) {
-      console.error('Failed to clear data:', error);
-      toast.error('Failed to clear data');
+      console.error("Failed to clear data:", error);
+      toast.error("Failed to clear data");
     }
   };
 
   const handleExportData = async () => {
     try {
       const data = await chatStorage.exportAllData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `ai-chat-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `ai-chat-data-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Data exported');
+      toast.success("Data exported");
     } catch (error) {
-      console.error('Failed to export data:', error);
-      toast.error('Failed to export data');
+      console.error("Failed to export data:", error);
+      toast.error("Failed to export data");
     }
   };
 
@@ -170,7 +193,11 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                   <Download className="w-4 h-4 mr-2" />
                   Export
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Clear All
                 </Button>
@@ -197,32 +224,44 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                         <div className="flex items-center space-x-2">
                           <MessageSquare className="w-8 h-8 text-blue-600" />
                           <div>
-                            <div className="text-2xl font-bold">{conversations.length}</div>
-                            <div className="text-sm text-gray-500">Conversations</div>
+                            <div className="text-2xl font-bold">
+                              {conversations.length}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Conversations
+                            </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-2">
                           <MessageSquare className="w-8 h-8 text-green-600" />
                           <div>
-                            <div className="text-2xl font-bold">{messages.length}</div>
-                            <div className="text-sm text-gray-500">Messages</div>
+                            <div className="text-2xl font-bold">
+                              {messages.length}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Messages
+                            </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-2">
                           <SettingsIcon className="w-8 h-8 text-purple-600" />
                           <div>
-                            <div className="text-2xl font-bold">{settings.length}</div>
-                            <div className="text-sm text-gray-500">API Keys</div>
+                            <div className="text-2xl font-bold">
+                              {settings.length}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              API Keys
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -234,7 +273,10 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                       <CardTitle className="text-sm">Privacy Notice</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-gray-600">
-                      <p>All your data is stored locally in your browser using IndexedDB. Nothing is sent to our servers. You can:</p>
+                      <p>
+                        All your data is stored locally in your browser using
+                        IndexedDB. Nothing is sent to our servers. You can:
+                      </p>
                       <ul className="mt-2 space-y-1 list-disc list-inside">
                         <li>Export your data for backup</li>
                         <li>Delete individual messages or conversations</li>
@@ -253,16 +295,26 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                           <CardContent className="p-3">
                             <div className="flex items-center justify-between">
                               <div>
-                                <div className="font-medium">{conversation.title}</div>
+                                <div className="font-medium">
+                                  {conversation.title}
+                                </div>
                                 <div className="text-sm text-gray-500">
-                                  {conversation.provider} • {conversation.model} • {format(new Date(conversation.updatedAt), 'MMM d, yyyy')}
+                                  {conversation.provider} • {conversation.model}{" "}
+                                  •{" "}
+                                  {format(
+                                    new Date(conversation.updatedAt),
+                                    "MMM d, yyyy"
+                                  )}
                                 </div>
                               </div>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  setItemToDelete({ type: 'conversation', id: conversation.id! });
+                                  setItemToDelete({
+                                    type: "conversation",
+                                    id: conversation.id!,
+                                  });
                                   setDeleteDialogOpen(true);
                                 }}
                               >
@@ -289,7 +341,10 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                                     {message.role}
                                   </Badge>
                                   <span className="text-xs text-gray-500">
-                                    {format(new Date(message.timestamp), 'MMM d, HH:mm')}
+                                    {format(
+                                      new Date(message.timestamp),
+                                      "MMM d, HH:mm"
+                                    )}
                                   </span>
                                 </div>
                                 <div className="text-sm text-gray-700 truncate">
@@ -300,7 +355,10 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  setItemToDelete({ type: 'message', id: message.id! });
+                                  setItemToDelete({
+                                    type: "message",
+                                    id: message.id!,
+                                  });
                                   setDeleteDialogOpen(true);
                                 }}
                               >
@@ -322,13 +380,16 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
                           <CardContent className="p-3">
                             <div className="flex items-center justify-between">
                               <div>
-                                <div className="font-medium">{setting.provider}</div>
+                                <div className="font-medium">
+                                  {setting.provider}
+                                </div>
                                 <div className="text-sm text-gray-500">
-                                  Model: {setting.model} • API Key: {setting.apiKey ? 'Configured' : 'Not set'}
+                                  Model: {setting.model} • API Key:{" "}
+                                  {setting.apiKey ? "Configured" : "Not set"}
                                 </div>
                               </div>
                               <Badge variant="outline" className="text-xs">
-                                {setting.apiKey ? 'Active' : 'Inactive'}
+                                {setting.apiKey ? "Active" : "Inactive"}
                               </Badge>
                             </div>
                           </CardContent>
@@ -348,23 +409,24 @@ export function DatabaseViewer({ isOpen, onClose, onDataChanged }: DatabaseViewe
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {itemToDelete ? `Delete ${itemToDelete.type}` : 'Clear All Data'}
+              {itemToDelete ? `Delete ${itemToDelete.type}` : "Clear All Data"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {itemToDelete 
+              {itemToDelete
                 ? `Are you sure you want to delete this ${itemToDelete.type}? This action cannot be undone.`
-                : 'Are you sure you want to clear all data? This will delete all conversations, messages, and settings. This action cannot be undone.'
-              }
+                : "Are you sure you want to clear all data? This will delete all conversations, messages, and settings. This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setItemToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (itemToDelete) {
-                  if (itemToDelete.type === 'conversation') {
+                  if (itemToDelete.type === "conversation") {
                     await handleDeleteConversation(itemToDelete.id);
-                  } else if (itemToDelete.type === 'message') {
+                  } else if (itemToDelete.type === "message") {
                     await handleDeleteMessage(itemToDelete.id);
                   }
                   setItemToDelete(null);

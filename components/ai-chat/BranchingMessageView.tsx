@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageBubble } from "./MessageBubble";
-import { 
-  GitBranch, 
-  MessageSquare, 
-  ArrowRight,
-  Plus
-} from "lucide-react";
-import { type Message } from "@/lib/chat-storage";
+import { Button } from "@/components/ui/button";
 import { AI_PROVIDERS } from "@/lib/ai-providers";
+import { type Message } from "@/lib/chat-storage";
+import { ArrowRight, GitBranch, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { MessageBubble } from "./MessageBubble";
 
 interface MessageThread {
   id: string;
@@ -35,14 +30,19 @@ export function BranchingMessageView({
   onEditMessage,
   onReplyToThread,
 }: BranchingMessageViewProps) {
-  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set());
+  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
+    new Set()
+  );
 
   // Group messages into threads
-  const groupMessagesByThread = (): { mainThread: Message[]; branches: MessageThread[] } => {
+  const groupMessagesByThread = (): {
+    mainThread: Message[];
+    branches: MessageThread[];
+  } => {
     const mainThread: Message[] = [];
     const branchMap: Record<string, Message[]> = {};
 
-    messages.forEach(message => {
+    messages.forEach((message) => {
       if (!message.threadId) {
         mainThread.push(message);
       } else {
@@ -53,19 +53,25 @@ export function BranchingMessageView({
       }
     });
 
-    const branches: MessageThread[] = Object.entries(branchMap).map(([threadId, threadMessages]) => {
-      const firstMessage = threadMessages[0];
-      return {
-        id: threadId,
-        messages: threadMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
-        provider: firstMessage.provider || 'unknown',
-        model: firstMessage.model || 'unknown',
-      };
-    });
+    const branches: MessageThread[] = Object.entries(branchMap).map(
+      ([threadId, threadMessages]) => {
+        const firstMessage = threadMessages[0];
+        return {
+          id: threadId,
+          messages: threadMessages.sort(
+            (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+          ),
+          provider: firstMessage.provider || "unknown",
+          model: firstMessage.model || "unknown",
+        };
+      }
+    );
 
-    return { 
-      mainThread: mainThread.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
-      branches 
+    return {
+      mainThread: mainThread.sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+      ),
+      branches,
     };
   };
 
@@ -82,13 +88,13 @@ export function BranchingMessageView({
   };
 
   const getProviderIcon = (providerId: string) => {
-    const provider = AI_PROVIDERS.find(p => p.id === providerId);
-    return provider?.icon || '🤖';
+    const provider = AI_PROVIDERS.find((p) => p.id === providerId);
+    return provider?.icon || "🤖";
   };
 
   const findBranchesForMessage = (messageId: number): MessageThread[] => {
-    return branches.filter(branch => 
-      branch.messages.some(m => m.parentMessageId === messageId)
+    return branches.filter((branch) =>
+      branch.messages.some((m) => m.parentMessageId === messageId)
     );
   };
 
@@ -108,14 +114,18 @@ export function BranchingMessageView({
                 onCopy={onCopyMessage}
                 onRegenerate={onRegenerateMessage}
                 onEdit={onEditMessage}
-                providerInfo={message.provider ? {
-                  provider: message.provider,
-                  model: message.model || ''
-                } : undefined}
+                providerInfo={
+                  message.provider
+                    ? {
+                        provider: message.provider,
+                        model: message.model || "",
+                      }
+                    : undefined
+                }
               />
 
               {/* Reply button for assistant messages */}
-              {message.role === 'assistant' && (
+              {message.role === "assistant" && (
                 <div className="absolute -bottom-2 left-12">
                   <Button
                     variant="ghost"
@@ -139,26 +149,32 @@ export function BranchingMessageView({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      messageBranches.forEach(branch => toggleBranch(branch.id));
+                      messageBranches.forEach((branch) =>
+                        toggleBranch(branch.id)
+                      );
                     }}
                     className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
                   >
                     <GitBranch className="w-3 h-3 mr-1" />
-                    {messageBranches.length} conversation{messageBranches.length !== 1 ? 's' : ''}
+                    {messageBranches.length} conversation
+                    {messageBranches.length !== 1 ? "s" : ""}
                   </Button>
                 </div>
 
                 {/* Show branch previews */}
                 <div className="mt-2 space-y-1">
-                  {messageBranches.map(branch => (
+                  {messageBranches.map((branch) => (
                     <div key={branch.id} className="ml-4">
                       <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border-l-2 border-gray-300">
                         <Badge variant="outline" className="text-xs">
-                          <span className="mr-1">{getProviderIcon(branch.provider)}</span>
+                          <span className="mr-1">
+                            {getProviderIcon(branch.provider)}
+                          </span>
                           {branch.model}
                         </Badge>
                         <span className="text-xs text-gray-600">
-                          {branch.messages.length} message{branch.messages.length !== 1 ? 's' : ''}
+                          {branch.messages.length} message
+                          {branch.messages.length !== 1 ? "s" : ""}
                         </span>
                         <Button
                           variant="ghost"
@@ -166,14 +182,16 @@ export function BranchingMessageView({
                           onClick={() => toggleBranch(branch.id)}
                           className="h-5 px-1 text-xs ml-auto"
                         >
-                          {expandedBranches.has(branch.id) ? 'Collapse' : 'Expand'}
+                          {expandedBranches.has(branch.id)
+                            ? "Collapse"
+                            : "Expand"}
                         </Button>
                       </div>
 
                       {/* Expanded Branch Messages */}
                       {expandedBranches.has(branch.id) && (
                         <div className="ml-4 mt-2 pl-4 border-l-2 border-blue-200 space-y-3">
-                          {branch.messages.map(branchMessage => (
+                          {branch.messages.map((branchMessage) => (
                             <div key={branchMessage.id} className="relative">
                               <MessageBubble
                                 message={branchMessage}
@@ -187,20 +205,28 @@ export function BranchingMessageView({
                               />
 
                               {/* Continue this thread button */}
-                              {branchMessage.role === 'assistant' && 
-                               branchMessage === branch.messages[branch.messages.length - 1] && (
-                                <div className="absolute -bottom-2 left-12">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onReplyToThread(branch.id, branchMessage)}
-                                    className="h-6 px-2 text-xs bg-white border shadow-sm hover:bg-gray-50"
-                                  >
-                                    <ArrowRight className="w-3 h-3 mr-1" />
-                                    Continue
-                                  </Button>
-                                </div>
-                              )}
+                              {branchMessage.role === "assistant" &&
+                                branchMessage ===
+                                  branch.messages[
+                                    branch.messages.length - 1
+                                  ] && (
+                                  <div className="absolute -bottom-2 left-12">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        onReplyToThread(
+                                          branch.id,
+                                          branchMessage
+                                        )
+                                      }
+                                      className="h-6 px-2 text-xs bg-white border shadow-sm hover:bg-gray-50"
+                                    >
+                                      <ArrowRight className="w-3 h-3 mr-1" />
+                                      Continue
+                                    </Button>
+                                  </div>
+                                )}
                             </div>
                           ))}
                         </div>

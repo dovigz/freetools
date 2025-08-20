@@ -6,7 +6,11 @@ export interface AIProvider {
   apiKeyPlaceholder: string;
   models: AIModel[];
   headers: (apiKey: string) => Record<string, string>;
-  formatRequest: (messages: ChatMessage[], model: string, options?: ChatOptions) => any;
+  formatRequest: (
+    messages: ChatMessage[],
+    model: string,
+    options?: ChatOptions
+  ) => any;
   parseResponse: (response: any) => string;
   parseStreamChunk: (chunk: string) => string | null;
   supportedFeatures: {
@@ -28,7 +32,7 @@ export interface AIModel {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
@@ -40,53 +44,57 @@ export interface ChatOptions {
 
 // OpenAI Provider
 const openaiProvider: AIProvider = {
-  id: 'openai',
-  name: 'OpenAI',
-  icon: '🤖',
-  baseUrl: 'https://api.openai.com/v1/chat/completions',
-  apiKeyPlaceholder: 'sk-...',
+  id: "openai",
+  name: "OpenAI",
+  icon: "🤖",
+  baseUrl: "https://api.openai.com/v1/chat/completions",
+  apiKeyPlaceholder: "sk-...",
   models: [
     {
-      id: 'gpt-4o',
-      name: 'GPT-4o',
+      id: "gpt-4o",
+      name: "GPT-4o",
       maxTokens: 128000,
       costPer1kTokens: { input: 0.005, output: 0.015 },
     },
     {
-      id: 'gpt-4o-mini',
-      name: 'GPT-4o Mini',
+      id: "gpt-4o-mini",
+      name: "GPT-4o Mini",
       maxTokens: 128000,
       costPer1kTokens: { input: 0.00015, output: 0.0006 },
     },
     {
-      id: 'gpt-4-turbo',
-      name: 'GPT-4 Turbo',
+      id: "gpt-4-turbo",
+      name: "GPT-4 Turbo",
       maxTokens: 128000,
       costPer1kTokens: { input: 0.01, output: 0.03 },
     },
     {
-      id: 'gpt-3.5-turbo',
-      name: 'GPT-3.5 Turbo',
+      id: "gpt-3.5-turbo",
+      name: "GPT-3.5 Turbo",
       maxTokens: 16385,
       costPer1kTokens: { input: 0.0005, output: 0.0015 },
     },
   ],
   headers: (apiKey: string) => ({
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
   }),
-  formatRequest: (messages: ChatMessage[], model: string, options?: ChatOptions) => ({
+  formatRequest: (
+    messages: ChatMessage[],
+    model: string,
+    options?: ChatOptions
+  ) => ({
     model,
     messages,
     stream: true,
     ...(options?.temperature && { temperature: options.temperature }),
     ...(options?.maxTokens && { max_tokens: options.maxTokens }),
   }),
-  parseResponse: (response: any) => response.choices[0]?.message?.content || '',
+  parseResponse: (response: any) => response.choices[0]?.message?.content || "",
   parseStreamChunk: (chunk: string) => {
-    if (chunk.startsWith('data: ')) {
+    if (chunk.startsWith("data: ")) {
       const data = chunk.slice(6).trim();
-      if (data === '[DONE]') return null;
+      if (data === "[DONE]") return null;
       try {
         const parsed = JSON.parse(data);
         return parsed.choices[0]?.delta?.content || null;
@@ -106,40 +114,44 @@ const openaiProvider: AIProvider = {
 
 // Anthropic Claude Provider
 const anthropicProvider: AIProvider = {
-  id: 'anthropic',
-  name: 'Anthropic Claude',
-  icon: '🧠',
-  baseUrl: 'https://api.anthropic.com/v1/messages',
-  apiKeyPlaceholder: 'sk-ant-...',
+  id: "anthropic",
+  name: "Anthropic Claude",
+  icon: "🧠",
+  baseUrl: "https://api.anthropic.com/v1/messages",
+  apiKeyPlaceholder: "sk-ant-...",
   models: [
     {
-      id: 'claude-3-5-sonnet-20241022',
-      name: 'Claude 3.5 Sonnet',
+      id: "claude-3-5-sonnet-20241022",
+      name: "Claude 3.5 Sonnet",
       maxTokens: 200000,
       costPer1kTokens: { input: 0.003, output: 0.015 },
     },
     {
-      id: 'claude-3-haiku-20240307',
-      name: 'Claude 3 Haiku',
+      id: "claude-3-haiku-20240307",
+      name: "Claude 3 Haiku",
       maxTokens: 200000,
       costPer1kTokens: { input: 0.00025, output: 0.00125 },
     },
     {
-      id: 'claude-3-opus-20240229',
-      name: 'Claude 3 Opus',
+      id: "claude-3-opus-20240229",
+      name: "Claude 3 Opus",
       maxTokens: 200000,
       costPer1kTokens: { input: 0.015, output: 0.075 },
     },
   ],
   headers: (apiKey: string) => ({
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
-    'anthropic-version': '2023-06-01',
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    "anthropic-version": "2023-06-01",
   }),
-  formatRequest: (messages: ChatMessage[], model: string, options?: ChatOptions) => {
-    const systemMessage = messages.find(m => m.role === 'system');
-    const chatMessages = messages.filter(m => m.role !== 'system');
-    
+  formatRequest: (
+    messages: ChatMessage[],
+    model: string,
+    options?: ChatOptions
+  ) => {
+    const systemMessage = messages.find((m) => m.role === "system");
+    const chatMessages = messages.filter((m) => m.role !== "system");
+
     return {
       model,
       messages: chatMessages,
@@ -149,14 +161,14 @@ const anthropicProvider: AIProvider = {
       ...(options?.temperature && { temperature: options.temperature }),
     };
   },
-  parseResponse: (response: any) => response.content[0]?.text || '',
+  parseResponse: (response: any) => response.content[0]?.text || "",
   parseStreamChunk: (chunk: string) => {
-    if (chunk.startsWith('data: ')) {
+    if (chunk.startsWith("data: ")) {
       const data = chunk.slice(6).trim();
-      if (data === '[DONE]') return null;
+      if (data === "[DONE]") return null;
       try {
         const parsed = JSON.parse(data);
-        if (parsed.type === 'content_block_delta') {
+        if (parsed.type === "content_block_delta") {
           return parsed.delta?.text || null;
         }
       } catch {
@@ -175,37 +187,41 @@ const anthropicProvider: AIProvider = {
 
 // Google Gemini Provider
 const geminiProvider: AIProvider = {
-  id: 'google',
-  name: 'Google Gemini',
-  icon: '💎',
-  baseUrl: 'https://generativelanguage.googleapis.com/v1/models',
-  apiKeyPlaceholder: 'AIza...',
+  id: "google",
+  name: "Google Gemini",
+  icon: "💎",
+  baseUrl: "https://generativelanguage.googleapis.com/v1/models",
+  apiKeyPlaceholder: "AIza...",
   models: [
     {
-      id: 'gemini-1.5-pro',
-      name: 'Gemini 1.5 Pro',
+      id: "gemini-1.5-pro",
+      name: "Gemini 1.5 Pro",
       maxTokens: 2000000,
       costPer1kTokens: { input: 0.0035, output: 0.0105 },
     },
     {
-      id: 'gemini-1.5-flash',
-      name: 'Gemini 1.5 Flash',
+      id: "gemini-1.5-flash",
+      name: "Gemini 1.5 Flash",
       maxTokens: 1000000,
       costPer1kTokens: { input: 0.000075, output: 0.0003 },
     },
     {
-      id: 'gemini-pro',
-      name: 'Gemini Pro',
+      id: "gemini-pro",
+      name: "Gemini Pro",
       maxTokens: 30720,
       costPer1kTokens: { input: 0.0005, output: 0.0015 },
     },
   ],
   headers: (apiKey: string) => ({
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   }),
-  formatRequest: (messages: ChatMessage[], model: string, options?: ChatOptions) => {
-    const contents = messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
+  formatRequest: (
+    messages: ChatMessage[],
+    model: string,
+    options?: ChatOptions
+  ) => {
+    const contents = messages.map((msg) => ({
+      role: msg.role === "assistant" ? "model" : msg.role,
       parts: [{ text: msg.content }],
     }));
 
@@ -217,11 +233,12 @@ const geminiProvider: AIProvider = {
       },
     };
   },
-  parseResponse: (response: any) => response.candidates[0]?.content?.parts[0]?.text || '',
+  parseResponse: (response: any) =>
+    response.candidates[0]?.content?.parts[0]?.text || "",
   parseStreamChunk: (chunk: string) => {
-    if (chunk.startsWith('data: ')) {
+    if (chunk.startsWith("data: ")) {
       const data = chunk.slice(6).trim();
-      if (data === '[DONE]') return null;
+      if (data === "[DONE]") return null;
       try {
         const parsed = JSON.parse(data);
         return parsed.candidates[0]?.content?.parts[0]?.text || null;
@@ -246,12 +263,15 @@ export const AI_PROVIDERS: AIProvider[] = [
 ];
 
 export const getProvider = (id: string): AIProvider | undefined => {
-  return AI_PROVIDERS.find(provider => provider.id === id);
+  return AI_PROVIDERS.find((provider) => provider.id === id);
 };
 
-export const getModel = (providerId: string, modelId: string): AIModel | undefined => {
+export const getModel = (
+  providerId: string,
+  modelId: string
+): AIModel | undefined => {
   const provider = getProvider(providerId);
-  return provider?.models.find(model => model.id === modelId);
+  return provider?.models.find((model) => model.id === modelId);
 };
 
 // API calling utilities
@@ -266,14 +286,15 @@ export class ChatAPI {
     model: string,
     options?: ChatOptions
   ): AsyncGenerator<string, void, unknown> {
-    const url = this.provider.id === 'google' 
-      ? `${this.provider.baseUrl}/${model}:streamGenerateContent?key=${this.apiKey}`
-      : this.provider.baseUrl;
+    const url =
+      this.provider.id === "google"
+        ? `${this.provider.baseUrl}/${model}:streamGenerateContent?key=${this.apiKey}`
+        : this.provider.baseUrl;
 
     const body = this.provider.formatRequest(messages, model, options);
-    
+
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: this.provider.headers(this.apiKey),
       body: JSON.stringify(body),
     });
@@ -284,10 +305,10 @@ export class ChatAPI {
     }
 
     const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response body');
+    if (!reader) throw new Error("No response body");
 
     const decoder = new TextDecoder();
-    let buffer = '';
+    let buffer = "";
 
     try {
       while (true) {
@@ -295,8 +316,8 @@ export class ChatAPI {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           const content = this.provider.parseStreamChunk(line);
@@ -315,7 +336,7 @@ export class ChatAPI {
     model: string,
     options?: ChatOptions
   ): Promise<string> {
-    let fullResponse = '';
+    let fullResponse = "";
     for await (const chunk of this.streamChat(messages, model, options)) {
       fullResponse += chunk;
     }
@@ -325,41 +346,43 @@ export class ChatAPI {
 
 // Encryption utilities for API keys
 export const encryptionUtils = {
-  async encrypt(text: string, password: string = 'default'): Promise<string> {
+  async encrypt(text: string, password: string = "default"): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
     const passwordKey = encoder.encode(password);
 
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       passwordKey,
-      'PBKDF2',
+      "PBKDF2",
       false,
-      ['deriveKey']
+      ["deriveKey"]
     );
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const derivedKey = await crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt,
         iterations: 100000,
-        hash: 'SHA-256',
+        hash: "SHA-256",
       },
       key,
-      { name: 'AES-GCM', length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ['encrypt']
+      ["encrypt"]
     );
 
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { name: "AES-GCM", iv },
       derivedKey,
       data
     );
 
-    const result = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+    const result = new Uint8Array(
+      salt.length + iv.length + encrypted.byteLength
+    );
     result.set(salt, 0);
     result.set(iv, salt.length);
     result.set(new Uint8Array(encrypted), salt.length + iv.length);
@@ -367,38 +390,45 @@ export const encryptionUtils = {
     return btoa(String.fromCharCode(...result));
   },
 
-  async decrypt(encryptedText: string, password: string = 'default'): Promise<string> {
+  async decrypt(
+    encryptedText: string,
+    password: string = "default"
+  ): Promise<string> {
     const encoder = new TextEncoder();
     const passwordKey = encoder.encode(password);
 
-    const data = new Uint8Array(atob(encryptedText).split('').map(c => c.charCodeAt(0)));
+    const data = new Uint8Array(
+      atob(encryptedText)
+        .split("")
+        .map((c) => c.charCodeAt(0))
+    );
     const salt = data.slice(0, 16);
     const iv = data.slice(16, 28);
     const encrypted = data.slice(28);
 
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       passwordKey,
-      'PBKDF2',
+      "PBKDF2",
       false,
-      ['deriveKey']
+      ["deriveKey"]
     );
 
     const derivedKey = await crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt,
         iterations: 100000,
-        hash: 'SHA-256',
+        hash: "SHA-256",
       },
       key,
-      { name: 'AES-GCM', length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ['decrypt']
+      ["decrypt"]
     );
 
     const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
+      { name: "AES-GCM", iv },
       derivedKey,
       encrypted
     );

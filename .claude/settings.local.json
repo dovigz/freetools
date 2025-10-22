@@ -9,7 +9,8 @@
       "WebFetch(domain:api.github.com)",
       "Bash(git clone:*)",
       "Bash(grep:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Read(//mnt/c/Users/dovi/Pictures/Screenshots/**)"
     ],
     "deny": []
   }

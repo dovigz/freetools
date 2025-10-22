@@ -85,6 +85,111 @@ Tools include:
 - Utilities: camelCase
 - Hooks: `use-` prefix
 
+### localStorage Persistence Patterns
+
+The project uses localStorage to persist user data across sessions. Follow these patterns:
+
+#### 1. Simple Direct Pattern (Recommended for Form Inputs)
+Used in tools like `text-compare` and `url-params`:
+
+```typescript
+export default function ToolPage() {
+  const [inputValue, setInputValue] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("tool-name-key");
+    if (saved) {
+      setInputValue(saved);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save to localStorage when value changes (only after initial load)
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("tool-name-key", inputValue);
+    }
+  }, [inputValue, isLoaded]);
+}
+```
+
+**Key Points:**
+- Storage key format: `"tool-name-description"` (e.g., `"text-compare-left"`, `"url-params-input"`)
+- Use `isLoaded` flag to prevent saving empty state on first render
+- Separate `useEffect` for loading and saving
+- Simple string values - no JSON needed for basic inputs
+
+#### 2. Array/History Pattern
+Used in tools like `emoji-copy` for recent items:
+
+```typescript
+const useLocalStorageArray = (key: string, maxItems: number) => {
+  const getStoredArray = () => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const addItem = (item: string) => {
+    const items = getStoredArray();
+    const filtered = items.filter((i: string) => i !== item);
+    const updated = [item, ...filtered].slice(0, maxItems);
+    localStorage.setItem(key, JSON.stringify(updated));
+  };
+
+  return { getStoredArray, addItem };
+};
+```
+
+**Use Cases:**
+- Recent history (emojis, searches, URLs)
+- Auto-deduplication
+- Limited array size (e.g., last 20 items)
+
+#### 3. Complex State Pattern
+For tools with multiple related settings, use JSON serialization:
+
+```typescript
+useEffect(() => {
+  const saved = localStorage.getItem("tool-settings");
+  if (saved) {
+    const settings = JSON.parse(saved);
+    setOption1(settings.option1);
+    setOption2(settings.option2);
+  }
+}, []);
+
+useEffect(() => {
+  if (isLoaded) {
+    localStorage.setItem("tool-settings", JSON.stringify({
+      option1,
+      option2,
+    }));
+  }
+}, [option1, option2, isLoaded]);
+```
+
+#### Storage Key Naming Convention
+- Format: `"tool-id-description"`
+- Examples:
+  - `"text-compare-left"`
+  - `"url-params-input"`
+  - `"freetools-recent-emojis"`
+- Use lowercase with hyphens
+- Be descriptive and unique per tool
+
+#### Best Practices
+- Always wrap in try-catch for localStorage operations
+- Check `typeof window !== "undefined"` if SSR concerns exist
+- Use `isLoaded` flag to prevent overwriting saved data on mount
+- Clear data responsibly (provide user option if needed)
+- Consider data size limits (localStorage ~5-10MB per domain)
+
 ## Key Dependencies
 
 ### UI Components

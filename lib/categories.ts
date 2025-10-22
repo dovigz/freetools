@@ -113,4 +113,12 @@ export const tools: Tool[] = [
       "Chat with AI using your own API keys from OpenAI, Claude, and more",
     gradient: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
   },
+  {
+    id: "url-params",
+    name: "URL Parameters",
+    path: "/url-params",
+    emoji: "🔗",
+    description: "View, modify, and manage URL parameters easily",
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  },
 ];

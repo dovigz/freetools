@@ -9,6 +9,7 @@ FreeTools is a modern web application built with Next.js 15 and React 19, provid
 ## Architecture & Stack
 
 ### Core Technologies
+
 - **Next.js 15** with App Router
 - **React 19** with latest features
 - **TypeScript** for type safety
@@ -17,6 +18,7 @@ FreeTools is a modern web application built with Next.js 15 and React 19, provid
 - **Radix UI** primitives
 
 ### Development Setup
+
 - Development server runs on port **3001**: `npm run dev`
 - Uses `npm` as package manager (package-lock.json present)
 - Build command: `npm run build`
@@ -49,13 +51,15 @@ hooks/
 ## Available Tools (10 total)
 
 Each tool is defined in `lib/categories.ts` with:
+
 - Unique ID, name, path, emoji
 - Description and gradient colors
 - Individual pages in `app/[tool-name]/page.tsx`
 
 Tools include:
+
 1. QR Generator 📱
-2. Text Compare 📝  
+2. Text Compare 📝
 3. Password Generator 🔐
 4. Base64 Encoder 🔤
 5. Color Picker 🎨
@@ -68,18 +72,21 @@ Tools include:
 ## Code Patterns & Conventions
 
 ### Component Structure
+
 - Use TypeScript interfaces for props
 - Implement proper loading/error states
 - Follow shadcn/ui component patterns
 - Use `cn()` utility for conditional classes
 
 ### Styling
+
 - Tailwind CSS with custom CSS variables
 - Dark/light theme support via `next-themes`
 - Responsive design (mobile-first)
 - Component-specific gradients defined in categories
 
 ### File Naming
+
 - Pages: `page.tsx` (App Router)
 - Components: PascalCase
 - Utilities: camelCase
@@ -90,6 +97,7 @@ Tools include:
 The project uses localStorage to persist user data across sessions. Follow these patterns:
 
 #### 1. Simple Direct Pattern (Recommended for Form Inputs)
+
 Used in tools like `text-compare` and `url-params`:
 
 ```typescript
@@ -116,12 +124,14 @@ export default function ToolPage() {
 ```
 
 **Key Points:**
+
 - Storage key format: `"tool-name-description"` (e.g., `"text-compare-left"`, `"url-params-input"`)
 - Use `isLoaded` flag to prevent saving empty state on first render
 - Separate `useEffect` for loading and saving
 - Simple string values - no JSON needed for basic inputs
 
 #### 2. Array/History Pattern
+
 Used in tools like `emoji-copy` for recent items:
 
 ```typescript
@@ -147,11 +157,13 @@ const useLocalStorageArray = (key: string, maxItems: number) => {
 ```
 
 **Use Cases:**
+
 - Recent history (emojis, searches, URLs)
 - Auto-deduplication
 - Limited array size (e.g., last 20 items)
 
 #### 3. Complex State Pattern
+
 For tools with multiple related settings, use JSON serialization:
 
 ```typescript
@@ -166,15 +178,19 @@ useEffect(() => {
 
 useEffect(() => {
   if (isLoaded) {
-    localStorage.setItem("tool-settings", JSON.stringify({
-      option1,
-      option2,
-    }));
+    localStorage.setItem(
+      "tool-settings",
+      JSON.stringify({
+        option1,
+        option2,
+      })
+    );
   }
 }, [option1, option2, isLoaded]);
 ```
 
 #### Storage Key Naming Convention
+
 - Format: `"tool-id-description"`
 - Examples:
   - `"text-compare-left"`
@@ -184,6 +200,7 @@ useEffect(() => {
 - Be descriptive and unique per tool
 
 #### Best Practices
+
 - Always wrap in try-catch for localStorage operations
 - Check `typeof window !== "undefined"` if SSR concerns exist
 - Use `isLoaded` flag to prevent overwriting saved data on mount
@@ -193,12 +210,14 @@ useEffect(() => {
 ## Key Dependencies
 
 ### UI Components
+
 - All Radix UI primitives (`@radix-ui/react-*`)
 - `lucide-react` for icons
 - `cmdk` for command palette
 - `sonner` for toasts
 
 ### Utilities
+
 - `class-variance-authority` for variants
 - `clsx` + `tailwind-merge` for styling
 - `date-fns` for dates
@@ -207,6 +226,7 @@ useEffect(() => {
 ## Development Guidelines
 
 ### When Adding New Tools
+
 1. Add entry to `lib/categories.ts`
 2. Create `app/[tool-name]/page.tsx`
 3. Use existing UI components
@@ -214,12 +234,14 @@ useEffect(() => {
 5. Implement proper TypeScript types
 
 ### When Modifying Components
+
 - Preserve existing shadcn/ui patterns
 - Maintain accessibility features
 - Keep dark mode compatibility
 - Use proper TypeScript interfaces
 
 ### Testing & Quality
+
 - Run `npm run lint` before commits
 - Test on both desktop and mobile
 - Verify dark/light theme compatibility
@@ -228,12 +250,13 @@ useEffect(() => {
 ## Common Tasks
 
 ### Add New Tool
+
 ```typescript
 // 1. Add to lib/categories.ts
 {
   id: "new-tool",
   name: "New Tool",
-  path: "/new-tool", 
+  path: "/new-tool",
   emoji: "🔧",
   description: "Tool description",
   gradient: "linear-gradient(135deg, #color1 0%, #color2 100%)"
@@ -243,18 +266,22 @@ useEffect(() => {
 ```
 
 ### Modify Styling
+
 - Edit `app/globals.css` for global styles
 - Use Tailwind utilities in components
 - Extend `tailwind.config.ts` for custom values
 - Maintain CSS variable system for themes
 
 ### Update Dependencies
+
 - Check `package.json` for latest versions
 - Test compatibility with existing code
 - Update TypeScript types if needed
 
 ## Notes for AI Assistants
 
+- Always when making a new feature make sure to follow up with multiple questions to clarify requirements
+- Always when making a new feature make sure to follow the established patterns
 - Always check `lib/categories.ts` for tool definitions
 - Use existing shadcn/ui components when possible
 - Maintain consistent gradient styling per tool
